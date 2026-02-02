@@ -1,7 +1,7 @@
 package routes
 
 import (
-    "framerate/backend/config"
+    "github.com/Nowap83/FrameRate/backend/config"
     "net/http"
 
     "github.com/gin-gonic/gin"

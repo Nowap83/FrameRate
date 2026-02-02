@@ -1,8 +1,8 @@
 package migrations
 
 import (
-    "framerate/backend/config"
-    "framerate/backend/models"
+    "github.com/Nowap83/FrameRate/backend/config"
+    "github.com/Nowap83/FrameRate/backend/models"
     "log"
 )
 
