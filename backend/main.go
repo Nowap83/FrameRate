@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Nowap83/FrameRate/backend/config"
+  "github.com/Nowap83/FrameRate/backend/migrations"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -14,10 +15,25 @@ import (
 func main() {
 
 	if err := godotenv.Load("../.env"); err != nil {
-		log.Fatal("Erreur de chargement du fichier .env")
+		log.Println("Error loading .env file")
 	}
 
 	config.ConnectDB()
+    defer func() {
+        sqlDB, err := config.DB.DB()
+        if err != nil {
+            log.Printf("Failed to get DB instance: %v", err)
+            return
+        }
+        if err := sqlDB.Close(); err != nil {
+            log.Printf("Error closing database: %v", err)
+        } else {
+            log.Println("Database connection closed gracefully")
+        }
+    }()
+
+	
+	migrations.AutoMigrateAll()
 
 	r := gin.Default()
 
@@ -36,5 +52,7 @@ func main() {
 	}
 
 	log.Printf("Server starting on :%s\n", port)
-	r.Run(":" + port)
+  if err := r.Run(":" + port); err != nil {
+  	log.Fatal("Failed to start server:", err)
+	}
 }
