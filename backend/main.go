@@ -7,6 +7,7 @@ import (
 
 	"github.com/Nowap83/FrameRate/backend/config"
   "github.com/Nowap83/FrameRate/backend/migrations"
+	"github.com/Nowap83/FrameRate/backend/routes"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -45,6 +46,10 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
+	
+
+  routes.SetupRoutes(r)
+	
 
 	port := os.Getenv("PORT")
 	if port == "" {
