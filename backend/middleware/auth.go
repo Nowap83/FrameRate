@@ -2,36 +2,13 @@ package middleware
 
 import (
     "net/http"
-    "os"
     "strings"
-    "time"
 
     "github.com/gin-gonic/gin"
-    "github.com/golang-jwt/jwt/v5"
-)
+    
+	)
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-
-type Claims struct {
-    UserID uint `json:"user_id"`
-    jwt.RegisteredClaims
-}
-
-// crée un JWT pour un user
-func GenerateToken(userID uint) (string, error) {
-    claims := Claims{
-        UserID: userID,
-        RegisteredClaims: jwt.RegisteredClaims{
-            ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-            IssuedAt:  jwt.NewNumericDate(time.Now()),
-        },
-    }
-
-    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    return token.SignedString(jwtSecret)
-}
-
-// vérifie le JWT
+// vérifie le JWT 
 func AuthRequired() gin.HandlerFunc {
     return func(c *gin.Context) {
         // recup le header Authorization
@@ -63,10 +40,10 @@ func AuthRequired() gin.HandlerFunc {
             return
         }
 
-        // extrait les claims
-        claims, ok := token.Claims.(*Claims)
-        if !ok {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+        
+				claims, err := utils.ParseToken(tokenString)
+        if err != nil {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
             c.Abort()
             return
         }
