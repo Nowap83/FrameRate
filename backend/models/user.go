@@ -20,6 +20,31 @@ type User struct {
     UpdatedAt      time.Time `json:"updated_at"`
 }
 
+type UserResponse struct {
+    ID             uint      `json:"id"`
+    Username       string    `json:"username"`
+    Email          string    `json:"email"`
+    ProfilePicture string    `json:"profile_picture,omitempty"`
+    Bio            string    `json:"bio,omitempty"`
+    IsVerified     bool      `json:"is_verified"`
+    IsAdmin        bool      `json:"is_admin"`
+    CreatedAt      time.Time `json:"created_at"`
+}
+
+// convertisseur
+func (u *User) ToResponse() UserResponse {
+    return UserResponse{
+        ID:             u.ID,
+        Username:       u.Username,
+        Email:          u.Email,
+        ProfilePicture: u.ProfilePicture,
+        Bio:            u.Bio,
+        IsVerified:     u.IsVerified,
+        IsAdmin:        u.IsAdmin,
+        CreatedAt:      u.CreatedAt,
+    }
+}
+
 func (u *User) HashPassword(password string) error {
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
     if err != nil {
