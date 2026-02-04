@@ -3,7 +3,7 @@ package middleware
 import (
     "net/http"
     "strings"
-
+		"github.com/Nowap83/FrameRate/backend/utils"
     "github.com/gin-gonic/gin"
     
 	)
@@ -30,24 +30,12 @@ func AuthRequired() gin.HandlerFunc {
         tokenString := parts[1]
 
         // parse et valide le token
-        token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-            return jwtSecret, nil
-        })
-
-        if err != nil || !token.Valid {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
-            c.Abort()
-            return
-        }
-
-        
-				claims, err := utils.ParseToken(tokenString)
+				claims, err := utils.ValidateToken(tokenString)  
         if err != nil {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+            c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
             c.Abort()
             return
         }
-
         // garde user id dans le contexte
         c.Set("userID", claims.UserID)
         c.Next()
