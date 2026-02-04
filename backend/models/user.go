@@ -27,8 +27,8 @@ type UserResponse struct {
     ID             uint      `json:"id"`
     Username       string    `json:"username"`
     Email          string    `json:"email"`
-    ProfilePicture *string    `json:"profile_picture,omitempty"`
-    Bio            *string    `json:"bio,omitempty"`
+    ProfilePicture *string   `json:"profile_picture,omitempty"`
+    Bio            *string   `json:"bio,omitempty"`
     IsVerified     bool      `json:"is_verified"`
     IsAdmin        bool      `json:"is_admin"`
     CreatedAt      time.Time `json:"created_at"`
