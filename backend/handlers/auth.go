@@ -2,19 +2,26 @@ package handlers
 
 import (
     "net/http"
+		"encoding/hex"
+		"time"
+		"crypto/rand"
 
     "github.com/Nowap83/FrameRate/backend/models"
-    "github.com/Nowap83/FrameRate/backend/utils"  
+    "github.com/Nowap83/FrameRate/backend/utils"
     "github.com/gin-gonic/gin"
     "gorm.io/gorm"
 )
 
 type AuthHandler struct {
-    DB *gorm.DB
+    DB	*gorm.DB
+		EmailService *utils.EmailService
 }
 
-func NewAuthHandler(db *gorm.DB) *AuthHandler {
-    return &AuthHandler{DB: db}
+func NewAuthHandler(db *gorm.DB, emailService *utils.EmailService) *AuthHandler {
+    return &AuthHandler{
+			DB: db,
+			EmailService: emailService,
+		}
 }
 
 type RegisterRequest struct {
@@ -31,6 +38,14 @@ type LoginRequest struct {
 type AuthResponse struct {
     Token string              `json:"token"`
     User  models.UserResponse `json:"user"`
+}
+
+func generateVerificationToken() (string, error) {
+    bytes := make([]byte, 32)
+    if _, err := rand.Read(bytes); err != nil {
+        return "", err
+    }
+    return hex.EncodeToString(bytes), nil
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -54,11 +69,22 @@ func (h *AuthHandler) Register(c *gin.Context) {
         return
     }
 
+		// generation token mail
+		verificationToken, err := generateVerificationToken()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate verification token"})
+        return
+    }
+
+    expiresAt := time.Now().Add(24 * time.Hour)
+
     // create user
     user := models.User{
     		Username:		req.Username,
     		Email:			req.Email,
 				IsVerified:	false,
+				VerificationToken: &verificationToken,
+				TokenExpiresAt: &expiresAt,
     }
 
     if err := user.HashPassword(req.Password); err != nil {
@@ -71,16 +97,28 @@ func (h *AuthHandler) Register(c *gin.Context) {
         return
     }
 
-    // genere et renvoie token pour co directe
-    tokenString, err := utils.GenerateToken(user.ID)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		// envoit du mail verif
+    if err := h.EmailService.SendVerificationEmail(user.Email, user.Username, verificationToken); err != nil {
+				// cas user created mais mail pas send
+        c.JSON(http.StatusCreated, gin.H{
+            "message": "Account created but verification email failed. Please contact support.",
+            "user": gin.H{
+                "id":       user.ID,
+                "username": user.Username,
+                "email":    user.Email,
+            },
+        })
         return
     }
-
-    c.JSON(http.StatusCreated, AuthResponse{
-        Token: tokenString,
-        User:  user.ToResponse(),
+		
+		// reponse si bien send
+		c.JSON(http.StatusCreated, gin.H{
+        "message": "Registration successful! Please check your email to verify your account.",
+        "user": gin.H{
+            "id":       user.ID,
+            "username": user.Username,
+            "email":    user.Email,
+        },
     })
 }
 
@@ -103,6 +141,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
         return
     }
+		
+		// bloque login si mail pas verif
+		if !user.IsVerified {
+        c.JSON(http.StatusForbidden, gin.H{
+            "error": "Please verify your email before logging in. Check your inbox.",
+        })
+        return
+    }
 
     tokenString, err := utils.GenerateToken(user.ID)
     if err != nil {
@@ -113,5 +159,51 @@ func (h *AuthHandler) Login(c *gin.Context) {
     c.JSON(http.StatusOK, AuthResponse{
         Token: tokenString,
         User:  user.ToResponse(),
+    })
+}
+
+func (h *AuthHandler) VerifyEmail(c *gin.Context) {
+    token := c.Query("token")
+
+    if token == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Verification token is required"})
+        return
+    }
+
+    var user models.User
+
+    // trouve user avec token valide
+    if err := h.DB.Where("verification_token = ? AND token_expires_at > ?", token, time.Now()).First(&user).Error; err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired verification token"})
+        return
+    }
+
+    // cas deja verif
+    if user.IsVerified {
+        c.JSON(http.StatusOK, gin.H{"message": "Email already verified"})
+        return
+    }
+
+    // marque comme verif
+    user.IsVerified = true
+    user.VerificationToken = nil
+    user.TokenExpiresAt = nil
+
+    if err := h.DB.Save(&user).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify email"})
+        return
+    }
+
+    // genere token JWT pour co directe
+    tokenString, err := utils.GenerateToken(user.ID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate login token"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Email verified successfully! You are now logged in.",
+        "token":   tokenString,
+        "user":    user.ToResponse(),
     })
 }
