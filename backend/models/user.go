@@ -15,7 +15,7 @@ type User struct {
     ProfilePicture    *string        `gorm:"size:500" json:"profile_picture,omitempty"`
     Bio               *string        `gorm:"size:500" json:"bio,omitempty"`
     IsVerified        bool           `gorm:"default:false" json:"is_verified"`
-    VerificationToken *string        `gorm:"uniqueIndex" json:"-"`
+    VerificationToken *string        `json:"-"`
     TokenExpiresAt    *time.Time     `json:"-"`
     IsAdmin           bool           `gorm:"default:false" json:"is_admin"`
     CreatedAt         time.Time      `json:"created_at"`
