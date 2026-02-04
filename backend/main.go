@@ -11,6 +11,9 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/Nowap83/FrameRate/backend/validators"
+	"github.com/gin-gonic/gin/binding"               
+  "github.com/go-playground/validator/v10"
 )
 
 func main() {
@@ -35,7 +38,12 @@ func main() {
 
 	
 	migrations.AutoMigrateAll()
+	
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+  		validators.RegisterCustomValidators(v)
+  }
 
+	
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -48,7 +56,7 @@ func main() {
 	}))
 	
 
-  routes.SetupRoutes(r)
+  routes.SetupRoutes(r, config.DB)
 	
 
 	port := os.Getenv("PORT")
