@@ -8,6 +8,7 @@ import (
 	"github.com/Nowap83/FrameRate/backend/config"
   "github.com/Nowap83/FrameRate/backend/migrations"
 	"github.com/Nowap83/FrameRate/backend/routes"
+	"github.com/Nowap83/FrameRate/backend/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -43,6 +44,7 @@ func main() {
   		validators.RegisterCustomValidators(v)
   }
 
+	emailService := utils.NewEmailService()
 	
 	r := gin.Default()
 
@@ -56,7 +58,7 @@ func main() {
 	}))
 	
 
-  routes.SetupRoutes(r, config.DB)
+  routes.SetupRoutes(r, config.DB, emailService)
 	
 
 	port := os.Getenv("PORT")

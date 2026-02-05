@@ -3,14 +3,16 @@ package routes
 import (
     "github.com/Nowap83/FrameRate/backend/middleware"
 		"github.com/Nowap83/FrameRate/backend/handlers"
+  	"github.com/Nowap83/FrameRate/backend/utils"
+
 		"net/http"
 		"gorm.io/gorm"
     "github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(r *gin.Engine, db *gorm.DB) {
+func SetupRoutes(r *gin.Engine, db *gorm.DB, emailService *utils.EmailService) {
 
-		authHandler := handlers.NewAuthHandler(db)	
+		authHandler := handlers.NewAuthHandler(db, emailService)	
 
     // Health check (verif serveur)
     r.GET("/health", func(c *gin.Context) {
@@ -27,7 +29,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB) {
         {
             auth.POST("/register", authHandler.Register)
             auth.POST("/login", authHandler.Login)
-
+						auth.GET("/verify-email", authHandler.VerifyEmail)
         }
 
         // Routes protégées 
