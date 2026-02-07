@@ -10,6 +10,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func SetupRoutes(r *gin.Engine, db *gorm.DB, emailService *utils.EmailService) {
@@ -24,7 +28,23 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, emailService *utils.EmailService) {
 			"status": "healthy",
 		})
 	})
+	// Health check (verif serveur)
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "healthy",
+		})
+	})
 
+	// Groupe API (ref swagger)
+	api := r.Group("/api")
+	{
+		// Auth (publiques)
+		auth := api.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+			auth.GET("/verify-email", authHandler.VerifyEmail)
+		}
 	// Groupe API (ref swagger)
 	api := r.Group("/api")
 	{
