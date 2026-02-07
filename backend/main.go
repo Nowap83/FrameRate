@@ -6,15 +6,15 @@ import (
 	"time"
 
 	"github.com/Nowap83/FrameRate/backend/config"
-  "github.com/Nowap83/FrameRate/backend/migrations"
+	"github.com/Nowap83/FrameRate/backend/migrations"
 	"github.com/Nowap83/FrameRate/backend/routes"
 	"github.com/Nowap83/FrameRate/backend/utils"
+	"github.com/Nowap83/FrameRate/backend/validators"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
-	"github.com/Nowap83/FrameRate/backend/validators"
-	"github.com/gin-gonic/gin/binding"               
-  "github.com/go-playground/validator/v10"
 )
 
 func main() {
@@ -24,28 +24,27 @@ func main() {
 	}
 
 	config.ConnectDB()
-    defer func() {
-        sqlDB, err := config.DB.DB()
-        if err != nil {
-            log.Printf("Failed to get DB instance: %v", err)
-            return
-        }
-        if err := sqlDB.Close(); err != nil {
-            log.Printf("Error closing database: %v", err)
-        } else {
-            log.Println("Database connection closed gracefully")
-        }
-    }()
+	defer func() {
+		sqlDB, err := config.DB.DB()
+		if err != nil {
+			log.Printf("Failed to get DB instance: %v", err)
+			return
+		}
+		if err := sqlDB.Close(); err != nil {
+			log.Printf("Error closing database: %v", err)
+		} else {
+			log.Println("Database connection closed gracefully")
+		}
+	}()
 
-	
 	migrations.AutoMigrateAll()
-	
+
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-  		validators.RegisterCustomValidators(v)
-  }
+		validators.RegisterCustomValidators(v)
+	}
 
 	emailService := utils.NewEmailService()
-	
+
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -56,10 +55,8 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
-	
 
-  routes.SetupRoutes(r, config.DB, emailService)
-	
+	routes.SetupRoutes(r, config.DB, emailService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -67,7 +64,7 @@ func main() {
 	}
 
 	log.Printf("Server starting on :%s\n", port)
-  if err := r.Run(":" + port); err != nil {
-  	log.Fatal("Failed to start server:", err)
+	if err := r.Run(":" + port); err != nil {
+		log.Fatal("Failed to start server:", err)
 	}
 }
