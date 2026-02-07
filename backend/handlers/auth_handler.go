@@ -4,6 +4,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/Nowap83/FrameRate/backend/dto"
 	"github.com/Nowap83/FrameRate/backend/services"
 	"github.com/Nowap83/FrameRate/backend/validators"
 	"github.com/gin-gonic/gin"
@@ -25,7 +26,7 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 //
 
 func (h *AuthHandler) Register(c *gin.Context) {
-	var input services.RegisterInput
+	var input dto.RegisterRequest
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		if validationErr, ok := err.(validator.ValidationErrors); ok {
@@ -58,10 +59,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": response.Message,
-		"user":    response.User,
-	})
+	c.JSON(http.StatusCreated, response)
 }
 
 //
@@ -69,7 +67,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 //
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	var input services.LoginInput
+	var input dto.LoginRequest
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		if validationErr, ok := err.(validator.ValidationErrors); ok {
@@ -99,11 +97,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
-		"token":   response.Token,
-		"user":    response.User,
-	})
+	c.JSON(http.StatusOK, response)
 }
 
 //
@@ -131,11 +125,7 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": response.Message,
-		"token":   response.Token,
-		"user":    response.User,
-	})
+	c.JSON(http.StatusOK, response.Message)
 }
 
 //
@@ -156,9 +146,7 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"user": user.ToResponse(),
-	})
+	c.JSON(http.StatusOK, user)
 }
 
 //
@@ -172,7 +160,7 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	var input services.UpdateProfileInput
+	var input dto.UpdateProfileRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -189,10 +177,7 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Profile updated successfully",
-		"user":    user.ToResponse(),
-	})
+	c.JSON(http.StatusOK, user)
 }
 
 //
@@ -206,7 +191,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	var input services.ChangePasswordInput
+	var input dto.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
 		if validationErrors := validators.FormatValidationErrors(err); validationErrors != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"errors": validationErrors})

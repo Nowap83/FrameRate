@@ -5,10 +5,10 @@ import (
 	"github.com/Nowap83/FrameRate/backend/middleware"
 	"github.com/Nowap83/FrameRate/backend/services"
 	"github.com/Nowap83/FrameRate/backend/utils"
+	"github.com/gin-gonic/gin"
 
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
