@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/Nowap83/FrameRate/backend/dto"
 	"github.com/Nowap83/FrameRate/backend/models"
 	"github.com/Nowap83/FrameRate/backend/utils"
 	"golang.org/x/crypto/bcrypt"
@@ -26,18 +27,7 @@ func NewAuthService(db *gorm.DB, emailService *utils.EmailService) *AuthService 
 // REGISTER
 //
 
-type RegisterInput struct {
-	Username string `json:"username" binding:"required,username"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,strongpassword"`
-}
-
-type RegisterResponse struct {
-	User    models.UserResponse `json:"user"`
-	Message string              `json:"message"`
-}
-
-func (s *AuthService) Register(input RegisterInput) (*RegisterResponse, error) {
+func (s *AuthService) Register(input dto.RegisterRequest) (*dto.RegisterResponse, error) {
 
 	var existingUser models.User
 	// verification si email ou username existe deja
@@ -96,8 +86,7 @@ func (s *AuthService) Register(input RegisterInput) (*RegisterResponse, error) {
 		}
 	}()
 
-	return &RegisterResponse{
-		User:    user.ToResponse(),
+	return &dto.RegisterResponse{
 		Message: "Registration successful! Please check your email to verify your account.",
 	}, nil
 }
@@ -106,17 +95,7 @@ func (s *AuthService) Register(input RegisterInput) (*RegisterResponse, error) {
 // LOGIN
 //
 
-type LoginInput struct {
-	Login    string `json:"login" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
-type LoginResponse struct {
-	Token string              `json:"token"`
-	User  models.UserResponse `json:"user"`
-}
-
-func (s *AuthService) Login(input LoginInput) (*LoginResponse, error) {
+func (s *AuthService) Login(input dto.LoginRequest) (*dto.LoginResponse, error) {
 	// cherche user par mail ou username
 	var user models.User
 	result := s.db.Where("email = ? OR username = ?", input.Login, input.Login).First(&user)
@@ -139,27 +118,14 @@ func (s *AuthService) Login(input LoginInput) (*LoginResponse, error) {
 		return nil, errors.New("failed to generate token")
 	}
 
-	return &LoginResponse{
-		Token: token,
-		User:  user.ToResponse(),
-	}, nil
+	return dto.NewLoginResponse(token, &user), nil
 }
 
 //
 // VERIFY EMAIL
 //
 
-type VerifyEmailInput struct {
-	Token string `json:"token" binding:"required"`
-}
-
-type VerifyEmailResponse struct {
-	Token   string              `json:"token"`
-	User    models.UserResponse `json:"user"`
-	Message string              `json:"message"`
-}
-
-func (s *AuthService) VerifyEmail(token string) (*VerifyEmailResponse, error) {
+func (s *AuthService) VerifyEmail(token string) (*dto.VerifyEmailResponse, error) {
 	var user models.User
 
 	// find user
@@ -176,11 +142,11 @@ func (s *AuthService) VerifyEmail(token string) (*VerifyEmailResponse, error) {
 			return nil, errors.New("failed to generate token")
 		}
 
-		return &VerifyEmailResponse{
-			Token:   jwtToken,
-			User:    user.ToResponse(),
-			Message: "Email already verified",
-		}, nil
+		return dto.NewVerifyEmailResponse(
+			jwtToken,
+			&user,
+			"Email already verified",
+		), nil
 	}
 
 	// marque comme verif
@@ -198,11 +164,11 @@ func (s *AuthService) VerifyEmail(token string) (*VerifyEmailResponse, error) {
 		return nil, errors.New("failed to generate token")
 	}
 
-	return &VerifyEmailResponse{
-		Token:   jwtToken,
-		User:    user.ToResponse(),
-		Message: "Email verified successfully! You are now logged in.",
-	}, nil
+	return dto.NewVerifyEmailResponse(
+		jwtToken,
+		&user,
+		"Email verified successfully! You are now logged in.",
+	), nil
 }
 
 //
@@ -221,13 +187,7 @@ func (s *AuthService) GetUserByID(userID uint) (*models.User, error) {
 // UPDATE PROFILE
 //
 
-type UpdateProfileInput struct {
-	Username          *string `json:"username,omitempty"`
-	Bio               *string `json:"bio,omitempty"`
-	ProfilePictureURL *string `json:"profile_picture_url,omitempty"`
-}
-
-func (s *AuthService) UpdateProfile(userID uint, input UpdateProfileInput) (*models.User, error) {
+func (s *AuthService) UpdateProfile(userID uint, input dto.UpdateProfileRequest) (*dto.ProfileResponse, error) {
 	// recup user actuel
 	var user models.User
 	if err := s.db.First(&user, userID).Error; err != nil {
@@ -250,27 +210,22 @@ func (s *AuthService) UpdateProfile(userID uint, input UpdateProfileInput) (*mod
 	if input.Bio != nil {
 		updates["bio"] = *input.Bio
 	}
-	if input.ProfilePictureURL != nil {
-		updates["profile_picture_url"] = *input.ProfilePictureURL
+	if input.ProfilePicture != nil {
+		updates["profile_picture"] = *input.ProfilePicture
 	}
 
 	if err := s.db.Model(&user).Updates(updates).Error; err != nil {
 		return nil, errors.New("failed to update profile")
 	}
 
-	return &user, nil
+	return dto.NewProfileResponse(&user), nil
 }
 
 //
 // CHANGE PASSWORD
 //
 
-type ChangePasswordInput struct {
-	CurrentPassword string `json:"current_password" binding:"required"`
-	NewPassword     string `json:"new_password" binding:"required,strongpassword"`
-}
-
-func (s *AuthService) ChangePassword(userID uint, input ChangePasswordInput) error {
+func (s *AuthService) ChangePassword(userID uint, input dto.ChangePasswordRequest) error {
 	// recup user actuel
 	var user models.User
 	if err := s.db.First(&user, userID).Error; err != nil {
