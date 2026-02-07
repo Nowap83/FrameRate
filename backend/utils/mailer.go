@@ -1,41 +1,41 @@
-
 package utils
 
 import (
-    "fmt"
-    "log"
-    "os"
-    "github.com/resend/resend-go/v2"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/resend/resend-go/v2"
 )
 
 type EmailService struct {
-    client      *resend.Client
-    fromAddress string
-    frontendURL string
+	client      *resend.Client
+	fromAddress string
+	frontendURL string
 }
 
 func NewEmailService() *EmailService {
-    apiKey := os.Getenv("RESEND_API_KEY")
-    if apiKey == "" {
-        log.Fatal("RESEND_API_KEY not set")
-    }
-		
-		frontendURL := os.Getenv("FRONTEND_URL")
-    if frontendURL == "" {
-        log.Fatal("FRONTEND_URL not set")  
-    }
+	apiKey := os.Getenv("RESEND_API_KEY")
+	if apiKey == "" {
+		log.Fatal("RESEND_API_KEY not set")
+	}
 
-    return &EmailService{
-        client:      resend.NewClient(apiKey),
-        fromAddress: "FrameRate <onboarding@resend.dev>", // pas oublier de changer avec nom de domaine en prod
-        frontendURL: os.Getenv("FRONTEND_URL"),
-    }
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		log.Fatal("FRONTEND_URL not set")
+	}
+
+	return &EmailService{
+		client:      resend.NewClient(apiKey),
+		fromAddress: "FrameRate <onboarding@resend.dev>", // pas oublier de changer avec nom de domaine en prod
+		frontendURL: frontendURL,
+	}
 }
 
 func (s *EmailService) SendVerificationEmail(to, username, token string) error {
-    verifyURL := fmt.Sprintf("%s/verify-email?token=%s", s.frontendURL, token)
+	verifyURL := fmt.Sprintf("%s/verify-email?token=%s", s.frontendURL, token)
 
-    html := fmt.Sprintf(`
+	html := fmt.Sprintf(`
         <!DOCTYPE html>
         <html>
         <head>
@@ -74,19 +74,19 @@ func (s *EmailService) SendVerificationEmail(to, username, token string) error {
         </html>
     `, username, verifyURL, verifyURL)
 
-    params := &resend.SendEmailRequest{
-        From:    s.fromAddress,
-        To:      []string{to},
-        Subject: "Verify your FrameRate account",
-        Html:    html,
-    }
+	params := &resend.SendEmailRequest{
+		From:    s.fromAddress,
+		To:      []string{to},
+		Subject: "Verify your FrameRate account",
+		Html:    html,
+	}
 
-    _, err := s.client.Emails.Send(params)
-    if err != nil {
-        log.Printf("Failed to send email to %s: %v", to, err)
-        return fmt.Errorf("failed to send email: %w", err)
-    }
+	_, err := s.client.Emails.Send(params)
+	if err != nil {
+		log.Printf("Failed to send email to %s: %v", to, err)
+		return fmt.Errorf("failed to send email: %w", err)
+	}
 
-    log.Printf("Verification email sent to %s", to)
-    return nil
+	log.Printf("Verification email sent to %s", to)
+	return nil
 }
