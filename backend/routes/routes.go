@@ -1,53 +1,53 @@
 package routes
 
 import (
-    "github.com/Nowap83/FrameRate/backend/middleware"
-		"github.com/Nowap83/FrameRate/backend/handlers"
-  	"github.com/Nowap83/FrameRate/backend/utils"
+	"github.com/Nowap83/FrameRate/backend/handlers"
+	"github.com/Nowap83/FrameRate/backend/middleware"
+	"github.com/Nowap83/FrameRate/backend/services"
+	"github.com/Nowap83/FrameRate/backend/utils"
 
-		"net/http"
-		"gorm.io/gorm"
-    "github.com/gin-gonic/gin"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func SetupRoutes(r *gin.Engine, db *gorm.DB, emailService *utils.EmailService) {
 
-		authHandler := handlers.NewAuthHandler(db, emailService)	
+	authService := services.NewAuthService(db, emailService)
 
-    // Health check (verif serveur)
-    r.GET("/health", func(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{
-            "status": "healthy",
-        })
-    })
+	authHandler := handlers.NewAuthHandler(authService)
 
-    // Groupe API (ref swagger)
-    api := r.Group("/api")
-    {
-        // Auth (publiques)
-        auth := api.Group("/auth")
-        {
-            auth.POST("/register", authHandler.Register)
-            auth.POST("/login", authHandler.Login)
-						auth.GET("/verify-email", authHandler.VerifyEmail)
-        }
+	// Health check (verif serveur)
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "healthy",
+		})
+	})
 
-        // Routes protégées 
-        protected := api.Group("")
-        protected.Use(middleware.AuthRequired())
-        {
-            // Users
-            users := protected.Group("/users")
-            {            
-          			users.GET("/test", func(c *gin.Context) {
-                    userID := c.GetUint("userID")
-                    c.JSON(200, gin.H{
-                        "message": "protected route ok",
-                        "user_id": userID,
-                    })
-                })
-            }
-        }
-    }
+	// Groupe API (ref swagger)
+	api := r.Group("/api")
+	{
+		// Auth (publiques)
+		auth := api.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+			auth.GET("/verify-email", authHandler.VerifyEmail)
+		}
+
+		// Routes protégées
+		protected := api.Group("")
+		protected.Use(middleware.AuthRequired())
+		{
+			// Users
+			users := protected.Group("/users")
+			{
+				users.GET("/me", authHandler.GetProfile)
+				users.PUT("/me", authHandler.UpdateProfile)
+				users.PUT("/me/password", authHandler.ChangePassword)
+				users.DELETE("/me", authHandler.DeleteAccount)
+			}
+		}
+	}
 }
-
