@@ -32,7 +32,7 @@ func (g Gender) IsValid() bool {
 	return g >= GenderNotSet && g <= GenderNonBinary
 }
 
-// Person : Unifie Actor et Director
+// PERSON
 type Person struct {
 	ID                uint   `gorm:"primaryKey"`
 	TmdbID            int    `gorm:"uniqueIndex"`
@@ -48,24 +48,24 @@ type Person struct {
 	DeletedAt         gorm.DeletedAt `gorm:"index"`
 }
 
-// MovieCast : Table de jointure pour les acteurs (avec rôle)
+// MOVIE CAST
 type MovieCast struct {
 	MovieID       uint   `gorm:"primaryKey"`
 	PersonID      uint   `gorm:"primaryKey"`
 	CharacterName string `gorm:"type:varchar(255)"`
-	CastOrder     int    `gorm:"index"` // Pour trier par importance
+	CastOrder     int    `gorm:"index"`
 	CreatedAt     time.Time
 
 	Movie  Movie  `gorm:"foreignKey:MovieID"`
 	Person Person `gorm:"foreignKey:PersonID"`
 }
 
-// MovieCrew : Table de jointure pour l'équipe technique (directors, writers, etc.)
+// MOVIE CREW
 type MovieCrew struct {
 	MovieID    uint   `gorm:"primaryKey"`
 	PersonID   uint   `gorm:"primaryKey"`
-	Job        string `gorm:"primaryKey;type:varchar(100)"` // "Director", "Writer", "Producer"...
-	Department string `gorm:"type:varchar(100);index"`      // "Directing", "Writing", "Production"...
+	Job        string `gorm:"primaryKey;type:varchar(100)"`
+	Department string `gorm:"type:varchar(100);index"`
 	CreatedAt  time.Time
 
 	Movie  Movie  `gorm:"foreignKey:MovieID"`
