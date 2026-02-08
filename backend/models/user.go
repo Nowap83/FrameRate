@@ -11,7 +11,7 @@ type User struct {
 	Username          string         `gorm:"uniqueIndex;not null;size:50" json:"username"`
 	Email             string         `gorm:"uniqueIndex;not null;size:255" json:"email"`
 	PasswordHash      string         `gorm:"not null" json:"-"`
-	ProfilePicture    *string        `gorm:"size:500" json:"profile_picture,omitempty"`
+	ProfilePictureURL *string        `gorm:"size:500" json:"profile_picture,omitempty"`
 	Bio               *string        `gorm:"size:500" json:"bio,omitempty"`
 	IsVerified        bool           `gorm:"default:false" json:"is_verified"`
 	VerificationToken *string        `json:"-"`

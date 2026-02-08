@@ -18,6 +18,10 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, emailService *utils.EmailService) {
 
 	authHandler := handlers.NewAuthHandler(authService)
 
+	tmdbService := services.NewTMDBService()
+
+	tmdbHandler := handlers.NewTMDBHandler(tmdbService)
+
 	// Health check (verif serveur)
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -34,6 +38,15 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, emailService *utils.EmailService) {
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
 			auth.GET("/verify-email", authHandler.VerifyEmail)
+		}
+
+		// TMDB
+		tmdb := api.Group("/tmdb")
+		{
+			tmdb.GET("/search", tmdbHandler.SearchMovies)
+			tmdb.GET("/movie/:id", tmdbHandler.GetMovieDetails)
+			tmdb.GET("/movie/:id/credits", tmdbHandler.GetMovieCredits)
+			tmdb.GET("/image", tmdbHandler.GetImageURL)
 		}
 
 		// Routes protégées
