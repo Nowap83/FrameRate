@@ -24,9 +24,9 @@ type VerifyEmailRequest struct {
 }
 
 type UpdateProfileRequest struct {
-	Username       *string `json:"username,omitempty" binding:"omitempty,username"`
-	Bio            *string `json:"bio,omitempty" binding:"omitempty,max=500"`
-	ProfilePicture *string `json:"profile_picture,omitempty" binding:"omitempty,url"`
+	Username          *string `json:"username,omitempty" binding:"omitempty,username"`
+	Bio               *string `json:"bio,omitempty" binding:"omitempty,max=500"`
+	ProfilePictureURL *string `json:"profile_picture_url,omitempty" binding:"omitempty,url"`
 }
 
 type ChangePasswordRequest struct {
@@ -37,14 +37,14 @@ type ChangePasswordRequest struct {
 // RESPONSES
 
 type UserResponse struct {
-	ID             uint      `json:"id"`
-	Username       string    `json:"username"`
-	Email          string    `json:"email"`
-	ProfilePicture *string   `json:"profile_picture,omitempty"`
-	Bio            *string   `json:"bio,omitempty"`
-	IsVerified     bool      `json:"is_verified"`
-	IsAdmin        bool      `json:"is_admin"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID                uint      `json:"id"`
+	Username          string    `json:"username"`
+	Email             string    `json:"email"`
+	ProfilePictureURL *string   `json:"profile_picture_url,omitempty"`
+	Bio               *string   `json:"bio,omitempty"`
+	IsVerified        bool      `json:"is_verified"`
+	IsAdmin           bool      `json:"is_admin"`
+	CreatedAt         time.Time `json:"created_at"`
 }
 
 type RegisterResponse struct {
@@ -74,14 +74,14 @@ type MessageResponse struct {
 
 func ToUserResponse(user *models.User) UserResponse {
 	return UserResponse{
-		ID:             user.ID,
-		Username:       user.Username,
-		Email:          user.Email,
-		ProfilePicture: user.ProfilePicture,
-		Bio:            user.Bio,
-		IsVerified:     user.IsVerified,
-		IsAdmin:        user.IsAdmin,
-		CreatedAt:      user.CreatedAt,
+		ID:                user.ID,
+		Username:          user.Username,
+		Email:             user.Email,
+		ProfilePictureURL: user.ProfilePictureURL,
+		Bio:               user.Bio,
+		IsVerified:        user.IsVerified,
+		IsAdmin:           user.IsAdmin,
+		CreatedAt:         user.CreatedAt,
 	}
 }
 
