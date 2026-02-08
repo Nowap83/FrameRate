@@ -210,8 +210,8 @@ func (s *AuthService) UpdateProfile(userID uint, input dto.UpdateProfileRequest)
 	if input.Bio != nil {
 		updates["bio"] = *input.Bio
 	}
-	if input.ProfilePicture != nil {
-		updates["profile_picture"] = *input.ProfilePicture
+	if input.ProfilePictureURL != nil {
+		updates["profile_picture_url"] = *input.ProfilePictureURL
 	}
 
 	if err := s.db.Model(&user).Updates(updates).Error; err != nil {
