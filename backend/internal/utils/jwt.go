@@ -1,54 +1,73 @@
 package utils
 
 import (
-    "os"
-    "time"
-		"errors"
-    "github.com/golang-jwt/jwt/v5"
+	"errors"
+	"log"
+	"os"
+	"sync"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+var jwtSecret []byte
+var jwtSecretOnce sync.Once
+
+func GetJWTSecret() []byte {
+	jwtSecretOnce.Do(func() {
+		secret := os.Getenv("JWT_SECRET")
+		if secret == "" {
+			log.Fatal("JWT_SECRET environment variable is not set")
+		}
+		jwtSecret = []byte(secret)
+	})
+	return jwtSecret
+}
 
 type Claims struct {
-    UserID uint `json:"user_id"`
-    jwt.RegisteredClaims
+	UserID uint `json:"user_id"`
+	jwt.RegisteredClaims
 }
 
 // crée un JWT pour un user
 func GenerateToken(userID uint) (string, error) {
-    claims := Claims{
-        UserID: userID,
-        RegisteredClaims: jwt.RegisteredClaims{
-            ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-            IssuedAt:  jwt.NewNumericDate(time.Now()),
-        },
-    }
+	secret := GetJWTSecret()
 
-    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    return token.SignedString(jwtSecret)
+	claims := Claims{
+		UserID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(secret)
 }
 
 // decode et valide un JWT
 func ValidateToken(tokenString string) (*Claims, error) {
-    token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-            return nil, errors.New("invalid signing method")
-        }
-        return jwtSecret, nil
-    })
+	secret := GetJWTSecret()
 
-    if err != nil {
-        return nil, err
-    }
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+		return secret, nil
+	})
 
-    if !token.Valid {
-        return nil, errors.New("invalid token")
-    }
+	if err != nil {
+		return nil, err
+	}
 
-    claims, ok := token.Claims.(*Claims)
-    if !ok {
-        return nil, errors.New("invalid token claims")
-    }
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
 
-    return claims, nil
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
+		return nil, errors.New("invalid token claims")
+	}
+
+	return claims, nil
 }
