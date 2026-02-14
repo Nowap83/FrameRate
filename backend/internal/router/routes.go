@@ -1,10 +1,11 @@
-package routes
+package router
 
 import (
-	"github.com/Nowap83/FrameRate/backend/handlers"
-	"github.com/Nowap83/FrameRate/backend/middleware"
-	"github.com/Nowap83/FrameRate/backend/services"
-	"github.com/Nowap83/FrameRate/backend/utils"
+	"github.com/Nowap83/FrameRate/backend/internal/handler"
+	"github.com/Nowap83/FrameRate/backend/internal/middleware"
+	"github.com/Nowap83/FrameRate/backend/internal/repository"
+	"github.com/Nowap83/FrameRate/backend/internal/service"
+	"github.com/Nowap83/FrameRate/backend/internal/utils"
 	"github.com/gin-gonic/gin"
 
 	"net/http"
@@ -14,13 +15,14 @@ import (
 
 func SetupRoutes(r *gin.Engine, db *gorm.DB, emailService *utils.EmailService) {
 
-	authService := services.NewAuthService(db, emailService)
+	userRepo := repository.NewUserRepository(db)
+	authService := service.NewAuthService(userRepo, emailService)
 
-	authHandler := handlers.NewAuthHandler(authService)
+	authHandler := handler.NewAuthHandler(authService)
 
-	tmdbService := services.NewTMDBService()
+	tmdbService := service.NewTMDBService()
 
-	tmdbHandler := handlers.NewTMDBHandler(tmdbService)
+	tmdbHandler := handler.NewTMDBHandler(tmdbService)
 
 	// Health check (verif serveur)
 	r.GET("/health", func(c *gin.Context) {

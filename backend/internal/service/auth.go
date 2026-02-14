@@ -1,24 +1,26 @@
-package services
+package service
 
 import (
 	"errors"
 	"time"
 
-	"github.com/Nowap83/FrameRate/backend/dto"
-	"github.com/Nowap83/FrameRate/backend/models"
-	"github.com/Nowap83/FrameRate/backend/utils"
+	"github.com/Nowap83/FrameRate/backend/internal/dto"
+	"github.com/Nowap83/FrameRate/backend/internal/model"
+	"github.com/Nowap83/FrameRate/backend/internal/repository"
+	"github.com/Nowap83/FrameRate/backend/internal/utils"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	db           *gorm.DB
+	userRepo     repository.UserRepository
 	emailService *utils.EmailService
 }
 
-func NewAuthService(db *gorm.DB, emailService *utils.EmailService) *AuthService {
+func NewAuthService(userRepo repository.UserRepository, emailService *utils.EmailService) *AuthService {
 	return &AuthService{
-		db:           db,
+		userRepo:     userRepo,
 		emailService: emailService,
 	}
 }
@@ -29,15 +31,16 @@ func NewAuthService(db *gorm.DB, emailService *utils.EmailService) *AuthService 
 
 func (s *AuthService) Register(input dto.RegisterRequest) (*dto.RegisterResponse, error) {
 
-	var existingUser models.User
 	// verification si email ou username existe deja
-	err := s.db.Where("email = ? OR username = ?", input.Email, input.Username).First(&existingUser).Error
-
+	_, err := s.userRepo.GetByEmail(input.Email)
 	if err == nil {
-		// user trouvé = déjà pris
-		if existingUser.Email == input.Email {
-			return nil, errors.New("email already exists")
-		}
+		return nil, errors.New("email already exists")
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errors.New("database error")
+	}
+
+	_, err = s.userRepo.GetByUsername(input.Username)
+	if err == nil {
 		return nil, errors.New("username already exists")
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.New("database error")
@@ -58,7 +61,7 @@ func (s *AuthService) Register(input dto.RegisterRequest) (*dto.RegisterResponse
 	expiresAt := time.Now().Add(24 * time.Hour)
 
 	// creation user
-	user := models.User{
+	user := model.User{
 		Username:          input.Username,
 		Email:             input.Email,
 		PasswordHash:      hashedPassword,
@@ -68,7 +71,7 @@ func (s *AuthService) Register(input dto.RegisterRequest) (*dto.RegisterResponse
 		IsAdmin:           false,
 	}
 
-	if err := s.db.Create(&user).Error; err != nil {
+	if err := s.userRepo.Create(&user); err != nil {
 		return nil, errors.New("failed to create user")
 	}
 
@@ -79,10 +82,16 @@ func (s *AuthService) Register(input dto.RegisterRequest) (*dto.RegisterResponse
 			user.Username,
 			verificationToken,
 		); err != nil {
-			// TODO: Logger avec zap?
-			println("Failed to send verification email:", err.Error())
+			utils.Log.Error("Failed to send verification email",
+				zap.Uint("user_id", user.ID),
+				zap.String("email", user.Email),
+				zap.Error(err),
+			)
 		} else {
-			println("Verification email sent to", user.Email)
+			utils.Log.Info("Verification email sent",
+				zap.Uint("user_id", user.ID),
+				zap.String("email", user.Email),
+			)
 		}
 	}()
 
@@ -97,10 +106,12 @@ func (s *AuthService) Register(input dto.RegisterRequest) (*dto.RegisterResponse
 
 func (s *AuthService) Login(input dto.LoginRequest) (*dto.LoginResponse, error) {
 	// cherche user par mail ou username
-	var user models.User
-	result := s.db.Where("email = ? OR username = ?", input.Login, input.Login).First(&user)
-	if result.Error != nil {
-		return nil, errors.New("invalid credentials")
+	user, err := s.userRepo.GetByEmailOrUsername(input.Login)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("invalid credentials")
+		}
+		return nil, errors.New("database error")
 	}
 
 	// verif du mdp
@@ -118,7 +129,7 @@ func (s *AuthService) Login(input dto.LoginRequest) (*dto.LoginResponse, error) 
 		return nil, errors.New("failed to generate token")
 	}
 
-	return dto.NewLoginResponse(token, &user), nil
+	return dto.NewLoginResponse(token, user), nil
 }
 
 //
@@ -126,11 +137,13 @@ func (s *AuthService) Login(input dto.LoginRequest) (*dto.LoginResponse, error) 
 //
 
 func (s *AuthService) VerifyEmail(token string) (*dto.VerifyEmailResponse, error) {
-	var user models.User
-
 	// find user
-	if err := s.db.Where("verification_token = ? AND token_expires_at > ?", token, time.Now()).
-		First(&user).Error; err != nil {
+	user, err := s.userRepo.GetByVerificationToken(token)
+	if err != nil {
+		return nil, errors.New("invalid or expired verification token")
+	}
+
+	if user.TokenExpiresAt != nil && user.TokenExpiresAt.Before(time.Now()) {
 		return nil, errors.New("invalid or expired verification token")
 	}
 
@@ -144,7 +157,7 @@ func (s *AuthService) VerifyEmail(token string) (*dto.VerifyEmailResponse, error
 
 		return dto.NewVerifyEmailResponse(
 			jwtToken,
-			&user,
+			user,
 			"Email already verified",
 		), nil
 	}
@@ -154,7 +167,7 @@ func (s *AuthService) VerifyEmail(token string) (*dto.VerifyEmailResponse, error
 	user.VerificationToken = nil
 	user.TokenExpiresAt = nil
 
-	if err := s.db.Save(&user).Error; err != nil {
+	if err := s.userRepo.Update(user); err != nil {
 		return nil, errors.New("failed to verify email")
 	}
 
@@ -166,7 +179,7 @@ func (s *AuthService) VerifyEmail(token string) (*dto.VerifyEmailResponse, error
 
 	return dto.NewVerifyEmailResponse(
 		jwtToken,
-		&user,
+		user,
 		"Email verified successfully! You are now logged in.",
 	), nil
 }
@@ -175,12 +188,12 @@ func (s *AuthService) VerifyEmail(token string) (*dto.VerifyEmailResponse, error
 // GET USER BY ID
 //
 
-func (s *AuthService) GetUserByID(userID uint) (*models.User, error) {
-	var user models.User
-	if err := s.db.First(&user, userID).Error; err != nil {
+func (s *AuthService) GetUserByID(userID uint) (*model.User, error) {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
 		return nil, errors.New("user not found")
 	}
-	return &user, nil
+	return user, nil
 }
 
 //
@@ -189,15 +202,15 @@ func (s *AuthService) GetUserByID(userID uint) (*models.User, error) {
 
 func (s *AuthService) UpdateProfile(userID uint, input dto.UpdateProfileRequest) (*dto.ProfileResponse, error) {
 	// recup user actuel
-	var user models.User
-	if err := s.db.First(&user, userID).Error; err != nil {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
 		return nil, errors.New("user not found")
 	}
 
 	// check nouveau username
 	if input.Username != nil && *input.Username != user.Username {
-		var existing models.User
-		if err := s.db.Where("username = ? AND id != ?", *input.Username, userID).First(&existing).Error; err == nil {
+		existing, err := s.userRepo.GetByUsername(*input.Username)
+		if err == nil && existing.ID != userID {
 			return nil, errors.New("username already taken")
 		}
 	}
@@ -214,11 +227,14 @@ func (s *AuthService) UpdateProfile(userID uint, input dto.UpdateProfileRequest)
 		updates["profile_picture_url"] = *input.ProfilePictureURL
 	}
 
-	if err := s.db.Model(&user).Updates(updates).Error; err != nil {
+	if err := s.userRepo.UpdateFields(userID, updates); err != nil {
 		return nil, errors.New("failed to update profile")
 	}
 
-	return dto.NewProfileResponse(&user), nil
+	// refresh user data for response
+	updatedUser, _ := s.userRepo.GetByID(userID)
+
+	return dto.NewProfileResponse(updatedUser), nil
 }
 
 //
@@ -227,8 +243,8 @@ func (s *AuthService) UpdateProfile(userID uint, input dto.UpdateProfileRequest)
 
 func (s *AuthService) ChangePassword(userID uint, input dto.ChangePasswordRequest) error {
 	// recup user actuel
-	var user models.User
-	if err := s.db.First(&user, userID).Error; err != nil {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
 		return errors.New("user not found")
 	}
 
@@ -238,13 +254,13 @@ func (s *AuthService) ChangePassword(userID uint, input dto.ChangePasswordReques
 	}
 
 	// hash nouveau password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	hashedPassword, err := utils.HashPassword(input.NewPassword)
 	if err != nil {
 		return errors.New("failed to hash password")
 	}
 
 	// update password
-	if err := s.db.Model(&user).Update("password_hash", string(hashedPassword)).Error; err != nil {
+	if err := s.userRepo.UpdateFields(userID, map[string]interface{}{"password_hash": string(hashedPassword)}); err != nil {
 		return errors.New("failed to update password")
 	}
 
@@ -256,7 +272,7 @@ func (s *AuthService) ChangePassword(userID uint, input dto.ChangePasswordReques
 //
 
 func (s *AuthService) DeleteAccount(userID uint) error {
-	if err := s.db.Delete(&models.User{}, userID).Error; err != nil {
+	if err := s.userRepo.Delete(userID); err != nil {
 		return errors.New("failed to delete account")
 	}
 	return nil
