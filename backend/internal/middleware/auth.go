@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Nowap83/FrameRate/backend/utils"
+	"github.com/Nowap83/FrameRate/backend/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,20 +1,20 @@
-package handlers
+package handler
 
 import (
 	"net/http"
 
-	"github.com/Nowap83/FrameRate/backend/dto"
-	"github.com/Nowap83/FrameRate/backend/services"
-	"github.com/Nowap83/FrameRate/backend/validators"
+	"github.com/Nowap83/FrameRate/backend/internal/dto"
+	"github.com/Nowap83/FrameRate/backend/internal/service"
+	internalValidator "github.com/Nowap83/FrameRate/backend/internal/validator"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type AuthHandler struct {
-	authService *services.AuthService
+	authService *service.AuthService
 }
 
-func NewAuthHandler(authService *services.AuthService) *AuthHandler {
+func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
 	}
@@ -30,7 +30,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	if err := c.ShouldBindJSON(&input); err != nil {
 		if validationErr, ok := err.(validator.ValidationErrors); ok {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"errors": validators.FormatValidationErrors(validationErr),
+				"errors": internalValidator.FormatValidationErrors(validationErr),
 			})
 			return
 		}
@@ -71,7 +71,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if err := c.ShouldBindJSON(&input); err != nil {
 		if validationErr, ok := err.(validator.ValidationErrors); ok {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"errors": validators.FormatValidationErrors(validationErr),
+				"errors": internalValidator.FormatValidationErrors(validationErr),
 			})
 			return
 		}
@@ -192,7 +192,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 
 	var input dto.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
-		if validationErrors := validators.FormatValidationErrors(err); validationErrors != nil {
+		if validationErrors := internalValidator.FormatValidationErrors(err); validationErrors != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"errors": validationErrors})
 			return
 		}

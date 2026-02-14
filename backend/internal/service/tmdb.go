@@ -1,4 +1,4 @@
-package services
+package service
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Nowap83/FrameRate/backend/dto"
+	"github.com/Nowap83/FrameRate/backend/internal/dto"
 )
 
 type TMDBService struct {

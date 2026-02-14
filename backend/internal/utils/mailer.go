@@ -2,10 +2,11 @@ package utils
 
 import (
 	"fmt"
-	"log"
 	"os"
 
-	"github.com/resend/resend-go/v2"
+	"go.uber.org/zap"
+
+	"github.com/resend/resend-go/v3"
 )
 
 type EmailService struct {
@@ -17,12 +18,12 @@ type EmailService struct {
 func NewEmailService() *EmailService {
 	apiKey := os.Getenv("RESEND_API_KEY")
 	if apiKey == "" {
-		log.Fatal("RESEND_API_KEY not set")
+		Log.Fatal("RESEND_API_KEY not set")
 	}
 
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
-		log.Fatal("FRONTEND_URL not set")
+		Log.Fatal("FRONTEND_URL not set")
 	}
 
 	return &EmailService{
@@ -83,10 +84,13 @@ func (s *EmailService) SendVerificationEmail(to, username, token string) error {
 
 	_, err := s.client.Emails.Send(params)
 	if err != nil {
-		log.Printf("Failed to send email to %s: %v", to, err)
+		Log.Error("Failed to send email",
+			zap.String("to", to),
+			zap.Error(err),
+		)
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
-	log.Printf("Verification email sent to %s", to)
+	Log.Info("Verification email sent", zap.String("to", to))
 	return nil
 }

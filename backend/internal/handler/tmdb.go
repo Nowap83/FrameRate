@@ -1,20 +1,19 @@
-// backend/handlers/tmdb_handler.go
-package handlers
+package handler
 
 import (
 	"net/http"
 	"strconv"
 
-	"github.com/Nowap83/FrameRate/backend/dto"
-	"github.com/Nowap83/FrameRate/backend/services"
+	"github.com/Nowap83/FrameRate/backend/internal/dto"
+	"github.com/Nowap83/FrameRate/backend/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
 type TMDBHandler struct {
-	tmdbService *services.TMDBService
+	tmdbService *service.TMDBService
 }
 
-func NewTMDBHandler(tmdbService *services.TMDBService) *TMDBHandler {
+func NewTMDBHandler(tmdbService *service.TMDBService) *TMDBHandler {
 	return &TMDBHandler{
 		tmdbService: tmdbService,
 	}

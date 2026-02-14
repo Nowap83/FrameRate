@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/Nowap83/FrameRate/backend/models"
+	"github.com/Nowap83/FrameRate/backend/internal/model"
 )
 
 // REQUESTS
@@ -72,7 +72,7 @@ type MessageResponse struct {
 
 // CONVERTERS
 
-func ToUserResponse(user *models.User) UserResponse {
+func ToUserResponse(user *model.User) UserResponse {
 	return UserResponse{
 		ID:                user.ID,
 		Username:          user.Username,
@@ -87,14 +87,14 @@ func ToUserResponse(user *models.User) UserResponse {
 
 // helpers de création de responses
 
-func NewLoginResponse(token string, user *models.User) *LoginResponse {
+func NewLoginResponse(token string, user *model.User) *LoginResponse {
 	return &LoginResponse{
 		Token: token,
 		User:  ToUserResponse(user),
 	}
 }
 
-func NewVerifyEmailResponse(token string, user *models.User, message string) *VerifyEmailResponse {
+func NewVerifyEmailResponse(token string, user *model.User, message string) *VerifyEmailResponse {
 	return &VerifyEmailResponse{
 		Token:   token,
 		User:    ToUserResponse(user),
@@ -102,7 +102,7 @@ func NewVerifyEmailResponse(token string, user *models.User, message string) *Ve
 	}
 }
 
-func NewProfileResponse(user *models.User) *ProfileResponse {
+func NewProfileResponse(user *model.User) *ProfileResponse {
 	return &ProfileResponse{
 		User: ToUserResponse(user),
 	}
