@@ -1,19 +1,18 @@
-package config
+package database
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"time"
+
+	"github.com/Nowap83/FrameRate/backend/internal/utils"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-var DB *gorm.DB
-
-func ConnectDB() {
+func ConnectDB() (*gorm.DB, error) {
 	user := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
 	host := os.Getenv("POSTGRES_HOST")
@@ -21,7 +20,7 @@ func ConnectDB() {
 	dbname := os.Getenv("POSTGRES_DB")
 
 	if user == "" || password == "" || dbname == "" {
-		log.Fatal("Variables PostgreSQL manquantes dans .env")
+		return nil, fmt.Errorf("missing PostgreSQL environment variables")
 	}
 
 	dsn := fmt.Sprintf(
@@ -29,18 +28,17 @@ func ConnectDB() {
 		host, user, password, dbname, port,
 	)
 
-	var err error
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 
 	if err != nil {
-		log.Fatalf("Database connection failed: %v", err)
+		return nil, fmt.Errorf("database connection failed: %w", err)
 	}
 
-	sqlDB, err := DB.DB()
+	sqlDB, err := db.DB()
 	if err != nil {
-		log.Fatalf("Failed to get database instance: %v", err)
+		return nil, fmt.Errorf("failed to get database instance: %w", err)
 	}
 
 	sqlDB.SetMaxIdleConns(10)
@@ -48,8 +46,9 @@ func ConnectDB() {
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	if err := sqlDB.Ping(); err != nil {
-		log.Fatalf("Database ping failed: %v", err)
+		return nil, fmt.Errorf("database ping failed: %w", err)
 	}
 
-	log.Println("Database connected successfully")
+	utils.Log.Info("Database connected successfully")
+	return db, nil
 }

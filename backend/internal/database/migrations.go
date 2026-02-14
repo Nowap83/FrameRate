@@ -1,35 +1,35 @@
-package migrations
+package database
 
 import (
-	"log"
-
-	"github.com/Nowap83/FrameRate/backend/config"
-	"github.com/Nowap83/FrameRate/backend/models"
+	"github.com/Nowap83/FrameRate/backend/internal/model"
+	"github.com/Nowap83/FrameRate/backend/internal/utils"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // migre auto tout les models
-func AutoMigrateAll() {
-	log.Println("Running database migrations...")
+func AutoMigrateAll(db *gorm.DB) {
+	utils.Log.Info("Running database migrations...")
 
-	err := config.DB.AutoMigrate(
-		&models.User{},
+	err := db.AutoMigrate(
+		&model.User{},
 
 		// Movie models
-		&models.Movie{},
-		&models.Genre{},
-		&models.Country{},
-		&models.Person{},
+		&model.Movie{},
+		&model.Genre{},
+		&model.Country{},
+		&model.Person{},
 
 		// Junction tables
-		&models.MovieCast{},
-		&models.MovieCrew{},
-		&models.Track{},
-		&models.Rate{},
+		&model.MovieCast{},
+		&model.MovieCrew{},
+		&model.Track{},
+		&model.Rate{},
 	)
 
 	if err != nil {
-		log.Fatal("Migration failed:", err)
+		utils.Log.Fatal("Migration failed", zap.Error(err))
 	}
 
-	log.Println("Database migrated successfully")
+	utils.Log.Info("Database migrated successfully")
 }

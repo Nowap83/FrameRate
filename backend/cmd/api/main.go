@@ -1,52 +1,61 @@
 package main
 
 import (
-	"log"
 	"os"
 	"time"
 
-	"github.com/Nowap83/FrameRate/backend/config"
-	"github.com/Nowap83/FrameRate/backend/migrations"
-	"github.com/Nowap83/FrameRate/backend/routes"
-	"github.com/Nowap83/FrameRate/backend/utils"
-	"github.com/Nowap83/FrameRate/backend/validators"
+	"github.com/Nowap83/FrameRate/backend/internal/config"
+	"github.com/Nowap83/FrameRate/backend/internal/database"
+	"github.com/Nowap83/FrameRate/backend/internal/router"
+	"github.com/Nowap83/FrameRate/backend/internal/utils"
+	internalValidator "github.com/Nowap83/FrameRate/backend/internal/validator"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 func main() {
+	utils.InitLogger()
+	defer utils.Log.Sync()
 
 	if err := godotenv.Load("../.env"); err != nil {
-		log.Println("Error loading .env file")
+		utils.Log.Warn("Error loading .env file")
 	}
 
-	config.ConnectDB()
+	if err := config.ValidateEnvironment(); err != nil {
+		utils.Log.Fatal("Configuration error", zap.Error(err))
+	}
+
+	db, err := database.ConnectDB()
+	if err != nil {
+		utils.Log.Fatal("Database initialization failed", zap.Error(err))
+	}
+
 	defer func() {
-		sqlDB, err := config.DB.DB()
+		sqlDB, err := db.DB()
 		if err != nil {
-			log.Printf("Failed to get DB instance: %v", err)
+			utils.Log.Error("Failed to get DB instance", zap.Error(err))
 			return
 		}
 		if err := sqlDB.Close(); err != nil {
-			log.Printf("Error closing database: %v", err)
+			utils.Log.Error("Error closing database", zap.Error(err))
 		} else {
-			log.Println("Database connection closed gracefully")
+			utils.Log.Info("Database connection closed gracefully")
 		}
 	}()
 
-	migrations.AutoMigrateAll()
+	database.AutoMigrateAll(db)
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		validators.RegisterCustomValidators(v)
+		internalValidator.RegisterCustomValidators(v)
 	}
 
 	emailService := utils.NewEmailService()
 
 	r := gin.Default()
-
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -56,15 +65,19 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	routes.SetupRoutes(r, config.DB, emailService)
+	router.SetupRoutes(r, db, emailService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	log.Printf("Server starting on :%s\n", port)
+	utils.Log.Info("Server starting",
+		zap.String("port", port),
+		zap.String("env", os.Getenv("ENV")),
+	)
+
 	if err := r.Run(":" + port); err != nil {
-		log.Fatal("Failed to start server:", err)
+		utils.Log.Fatal("Failed to start server", zap.Error(err))
 	}
 }
