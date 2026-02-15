@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
-const Input = ({ label, error, type = "text", className = "", ...props }) => {
+const Input = ({ label, error, type = "text", className = "", ...rest }) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === "password";
 
@@ -20,7 +20,7 @@ const Input = ({ label, error, type = "text", className = "", ...props }) => {
             )}
             <div className="relative group">
                 <input
-                    {...props}
+                    {...rest}
                     type={inputType}
                     className={`w-full bg-white/5 border ${error ? "border-red-500/50" : "border-white/10"
                         } text-white text-sm rounded-lg p-3 outline-none 
