@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import { AUTH_MOVIES } from "../data/authMovies";
+import { loginSchema, registerSchema } from "../validators/auth";
 
 const AuthPage = () => {
     const location = useLocation();
@@ -11,6 +14,27 @@ const AuthPage = () => {
 
     const isLogin = location.pathname === "/login";
     const [currentMovieIndex, setCurrentMovieIndex] = useState(0);
+
+    // init form avec react-hook-form
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset
+    } = useForm({
+        resolver: zodResolver(isLogin ? loginSchema : registerSchema),
+        mode: "onBlur"
+    });
+
+    // reset form quand on switch
+    useEffect(() => {
+        reset();
+    }, [isLogin, reset]);
+
+    const onSubmit = (data) => {
+        console.log("Form Submitted:", data);
+        // call api
+    };
 
     const pickRandomMovie = () => {
         let nextIndex;
@@ -105,9 +129,20 @@ const AuthPage = () => {
                                 <h3 className="text-2xl font-bold text-white mb-2">Welcome Back</h3>
                                 <p className="text-gray-400 text-sm mb-8">Sign in to track your watch list and rate your favorites.</p>
 
-                                <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-                                    <Input label="Email or Username" placeholder="Enter your email..." required />
-                                    <Input label="Password" type="password" placeholder="••••••••" required />
+                                <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+                                    <Input
+                                        label="Email or Username"
+                                        placeholder="Enter your email..."
+                                        {...register("email")}
+                                        error={errors.email?.message}
+                                    />
+                                    <Input
+                                        label="Password"
+                                        type="password"
+                                        placeholder="••••••••"
+                                        {...register("password")}
+                                        error={errors.password?.message}
+                                    />
 
                                     <div className="flex items-center justify-between text-xs">
                                         <label className="flex items-center gap-2 text-gray-400 cursor-pointer">
@@ -138,11 +173,34 @@ const AuthPage = () => {
                                 <h3 className="text-2xl font-bold text-white mb-2">Create Account</h3>
                                 <p className="text-gray-400 text-sm mb-8">Join the community of cinema lovers today.</p>
 
-                                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                                    <Input label="Email Address" type="email" placeholder="name@example.com" required />
-                                    <Input label="Username" placeholder="Choose a username" required />
-                                    <Input label="Password" type="password" placeholder="••••••••" required />
-                                    <Input label="Confirm Password" type="password" placeholder="••••••••" required />
+                                <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+                                    <Input
+                                        label="Email Address"
+                                        type="email"
+                                        placeholder="name@example.com"
+                                        {...register("email")}
+                                        error={errors.email?.message}
+                                    />
+                                    <Input
+                                        label="Username"
+                                        placeholder="Choose a username"
+                                        {...register("username")}
+                                        error={errors.username?.message}
+                                    />
+                                    <Input
+                                        label="Password"
+                                        type="password"
+                                        placeholder="••••••••"
+                                        {...register("password")}
+                                        error={errors.password?.message}
+                                    />
+                                    <Input
+                                        label="Confirm Password"
+                                        type="password"
+                                        placeholder="••••••••"
+                                        {...register("confirmPassword")}
+                                        error={errors.confirmPassword?.message}
+                                    />
 
                                     <Button type="submit" className="w-full py-3 mt-4">Register</Button>
                                 </form>
