@@ -1,57 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import Input from "../components/Input";
-
-const MOVIES = [
-    {
-        id: 1,
-        title: "Nightcrawler",
-        year: 2014,
-        image: "https://images.unsplash.com/photo-1485846234645-a62644ef7467?q=80&w=2000&auto=format&fit=crop",
-        quote: "Welcome back! Log in to continue your cinematic journey.",
-    },
-    {
-        id: 2,
-        title: "Drive",
-        year: 2011,
-        image: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2000&auto=format&fit=crop",
-        quote: "Join the community! Start rating, reviewing, and discovering films today!",
-    },
-    {
-        id: 3,
-        title: "Interstellar",
-        year: 2014,
-        image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=2000&auto=format&fit=crop",
-        quote: "Explore the vast universe of cinema with us.",
-    },
-];
+import { AUTH_MOVIES } from "../data/authMovies";
 
 const AuthPage = () => {
-    const [isLogin, setIsLogin] = useState(true);
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const isLogin = location.pathname === "/login";
     const [currentMovieIndex, setCurrentMovieIndex] = useState(0);
 
     const pickRandomMovie = () => {
         let nextIndex;
         do {
-            nextIndex = Math.floor(Math.random() * MOVIES.length);
-        } while (nextIndex === currentMovieIndex && MOVIES.length > 1);
+            nextIndex = Math.floor(Math.random() * AUTH_MOVIES.length);
+        } while (nextIndex === currentMovieIndex && AUTH_MOVIES.length > 1);
         setCurrentMovieIndex(nextIndex);
     };
 
     const toggleAuthMode = () => {
-        setIsLogin(!isLogin);
+        navigate(isLogin ? "/register" : "/login");
         pickRandomMovie();
     };
 
-    const movie = MOVIES[currentMovieIndex];
+    const movie = AUTH_MOVIES[currentMovieIndex];
 
     return (
         <div className="min-h-screen bg-[#0A0F0D] flex items-center justify-center p-4 overflow-hidden">
             <div className="w-full max-w-6xl h-[750px] bg-header-bg rounded-3xl shadow-2xl overflow-hidden flex relative">
 
-                {/* L'image qui slide (60%) */}
+                {/* image */}
                 <motion.div
                     className="absolute top-0 bottom-0 w-[60%] overflow-hidden z-10 hidden md:block"
                     animate={{ x: isLogin ? 0 : "66.666%" }}
@@ -98,7 +78,7 @@ const AuthPage = () => {
                     </AnimatePresence>
                 </motion.div>
 
-                {/* Le formulaire (40%) */}
+                {/* form */}
                 <motion.div
                     className="w-full md:w-[40%] p-8 md:p-14 flex flex-col justify-center bg-[#162520] z-0"
                     animate={{ x: isLogin ? "150%" : 0 }}
