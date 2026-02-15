@@ -7,6 +7,7 @@ import Button from "../components/Button";
 import Input from "../components/Input";
 import { AUTH_MOVIES } from "../data/authMovies";
 import { loginSchema, registerSchema } from "../validators/auth";
+import { authService } from "../api/auth";
 
 const AuthPage = () => {
     const location = useLocation();
@@ -14,12 +15,16 @@ const AuthPage = () => {
 
     const isLogin = location.pathname === "/login";
     const [currentMovieIndex, setCurrentMovieIndex] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+    const [apiError, setApiError] = useState(null);
+    const [isRegistered, setIsRegistered] = useState(false);
 
     // init form avec react-hook-form
     const {
         register,
         handleSubmit,
         formState: { errors },
+        setError,
         reset
     } = useForm({
         resolver: zodResolver(isLogin ? loginSchema : registerSchema),
@@ -29,11 +34,44 @@ const AuthPage = () => {
     // reset form quand on switch
     useEffect(() => {
         reset();
+        setApiError(null);
+        setIsRegistered(false);
     }, [isLogin, reset]);
 
-    const onSubmit = (data) => {
-        console.log("Form Submitted:", data);
-        // call api
+    const onSubmit = async (data) => {
+        setIsLoading(true);
+        setApiError(null);
+        try {
+            if (isLogin) {
+                const response = await authService.login(data);
+                console.log("Login Success:", response);
+                localStorage.setItem("token", response.token);
+                navigate("/");
+            } else {
+                const response = await authService.register(data);
+                console.log("Register Success:", response);
+                setIsRegistered(true);
+            }
+        } catch (error) {
+            console.error("Auth Error:", error);
+            const responseData = error.response?.data;
+
+            if (responseData?.errors) {
+                // objet d'erreurs du backend (ex: { email: "exists" })
+                Object.entries(responseData.errors).forEach(([field, message]) => {
+                    setError(field, { type: "server", message });
+                });
+            } else {
+                // erreur générale (string)
+                setApiError(
+                    responseData?.error ||
+                    responseData?.message ||
+                    "An unexpected error occurred. Please try again."
+                );
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const pickRandomMovie = () => {
@@ -129,12 +167,19 @@ const AuthPage = () => {
                                 <h3 className="text-2xl font-bold text-white mb-2">Welcome Back</h3>
                                 <p className="text-gray-400 text-sm mb-8">Sign in to track your watch list and rate your favorites.</p>
 
+                                {apiError && (
+                                    <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-lg mb-6">
+                                        {apiError}
+                                    </div>
+                                )}
+
                                 <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
                                     <Input
                                         label="Email or Username"
                                         placeholder="Enter your email..."
                                         {...register("email")}
                                         error={errors.email?.message}
+                                        disabled={isLoading}
                                     />
                                     <Input
                                         label="Password"
@@ -142,22 +187,29 @@ const AuthPage = () => {
                                         placeholder="••••••••"
                                         {...register("password")}
                                         error={errors.password?.message}
+                                        disabled={isLoading}
                                     />
 
                                     <div className="flex items-center justify-between text-xs">
                                         <label className="flex items-center gap-2 text-gray-400 cursor-pointer">
-                                            <input type="checkbox" className="rounded border-white/10 bg-white/5 text-mint focus:ring-mint" />
+                                            <input type="checkbox" className="rounded border-white/10 bg-white/5 text-mint focus:ring-mint" disabled={isLoading} />
                                             Remember me
                                         </label>
                                         <a href="#" className="text-gray-400 hover:text-white transition-colors">Forgot Password?</a>
                                     </div>
 
-                                    <Button type="submit" className="w-full py-3 mt-4">Login</Button>
+                                    <Button type="submit" className="w-full py-3 mt-4" disabled={isLoading}>
+                                        {isLoading ? "Connecting..." : "Login"}
+                                    </Button>
                                 </form>
 
                                 <p className="text-center text-sm text-gray-400 mt-8">
                                     Don't have an account?{" "}
-                                    <button onClick={toggleAuthMode} className="text-white font-semibold hover:text-mint transition-colors">
+                                    <button
+                                        onClick={toggleAuthMode}
+                                        className="text-white font-semibold hover:text-mint transition-colors"
+                                        disabled={isLoading}
+                                    >
                                         Sign Up
                                     </button>
                                 </p>
@@ -170,47 +222,82 @@ const AuthPage = () => {
                                 exit={{ opacity: 0, x: 20 }}
                                 className="w-full"
                             >
-                                <h3 className="text-2xl font-bold text-white mb-2">Create Account</h3>
-                                <p className="text-gray-400 text-sm mb-8">Join the community of cinema lovers today.</p>
+                                {isRegistered ? (
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 bg-mint/20 text-mint rounded-full flex items-center justify-center mx-auto mb-6">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="22 12 11 23 2 14" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-white mb-4">Check your email</h3>
+                                        <p className="text-gray-400 mb-8">
+                                            We've sent a verification link to your email address. Please click the link to activate your account.
+                                        </p>
+                                        <Button onClick={toggleAuthMode} className="w-full">
+                                            Back to Login
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <h3 className="text-2xl font-bold text-white mb-2">Create Account</h3>
+                                        <p className="text-gray-400 text-sm mb-8">Join the community of cinema lovers today.</p>
 
-                                <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-                                    <Input
-                                        label="Email Address"
-                                        type="email"
-                                        placeholder="name@example.com"
-                                        {...register("email")}
-                                        error={errors.email?.message}
-                                    />
-                                    <Input
-                                        label="Username"
-                                        placeholder="Choose a username"
-                                        {...register("username")}
-                                        error={errors.username?.message}
-                                    />
-                                    <Input
-                                        label="Password"
-                                        type="password"
-                                        placeholder="••••••••"
-                                        {...register("password")}
-                                        error={errors.password?.message}
-                                    />
-                                    <Input
-                                        label="Confirm Password"
-                                        type="password"
-                                        placeholder="••••••••"
-                                        {...register("confirmPassword")}
-                                        error={errors.confirmPassword?.message}
-                                    />
+                                        {apiError && (
+                                            <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-lg mb-6">
+                                                {apiError}
+                                            </div>
+                                        )}
 
-                                    <Button type="submit" className="w-full py-3 mt-4">Register</Button>
-                                </form>
+                                        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+                                            <Input
+                                                label="Email Address"
+                                                type="email"
+                                                placeholder="name@example.com"
+                                                {...register("email")}
+                                                error={errors.email?.message}
+                                                disabled={isLoading}
+                                            />
+                                            <Input
+                                                label="Username"
+                                                placeholder="Choose a username"
+                                                {...register("username")}
+                                                error={errors.username?.message}
+                                                disabled={isLoading}
+                                            />
+                                            <Input
+                                                label="Password"
+                                                type="password"
+                                                placeholder="••••••••"
+                                                {...register("password")}
+                                                error={errors.password?.message}
+                                                disabled={isLoading}
+                                            />
+                                            <Input
+                                                label="Confirm Password"
+                                                type="password"
+                                                placeholder="••••••••"
+                                                {...register("confirmPassword")}
+                                                error={errors.confirmPassword?.message}
+                                                disabled={isLoading}
+                                            />
 
-                                <p className="text-center text-sm text-gray-400 mt-8">
-                                    Already have an account?{" "}
-                                    <button onClick={toggleAuthMode} className="text-white font-semibold hover:text-mint transition-colors">
-                                        Log In
-                                    </button>
-                                </p>
+                                            <Button type="submit" className="w-full py-3 mt-4" disabled={isLoading}>
+                                                {isLoading ? "Creating account..." : "Register"}
+                                            </Button>
+                                        </form>
+
+                                        <p className="text-center text-sm text-gray-400 mt-8">
+                                            Already have an account?{" "}
+                                            <button
+                                                onClick={toggleAuthMode}
+                                                className="text-white font-semibold hover:text-mint transition-colors"
+                                                disabled={isLoading}
+                                            >
+                                                Log In
+                                            </button>
+                                        </p>
+                                    </>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>
