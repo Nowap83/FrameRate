@@ -29,8 +29,12 @@ const Header = () => {
             </div>
 
             <div className="flex items-center gap-3">
-                <Button className="bg-opacity-80 px-4 py-2 text-sm">Sign In</Button>
-                <Button className="px-4 py-2 text-sm">Register</Button>
+                <Link to="/login">
+                    <Button className="bg-opacity-80 px-4 py-2 text-sm">Sign In</Button>
+                </Link>
+                <Link to="/register">
+                    <Button className="px-4 py-2 text-sm">Register</Button>
+                </Link>
             </div>
         </header>
     );
