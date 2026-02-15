@@ -6,7 +6,7 @@ const Header = () => {
     return (
         <header className="bg-header-bg py-4 px-6 flex items-center justify-between shadow-lg">
             <div className="flex items-center gap-8">
-                {/* Logo */}
+                {/* logo mock */}
                 <Link to="/" className="flex items-center gap-2 text-white font-bold text-xl">
                     <div className="text-mint">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
@@ -16,7 +16,7 @@ const Header = () => {
                     FrameRate
                 </Link>
 
-                {/* Navigation */}
+                {/* navigation */}
                 <nav className="hidden md:flex items-center gap-6">
                     <Link to="/movies" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Films</Link>
                     <Link to="/lists" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Lists</Link>
