@@ -23,10 +23,18 @@ export const authService = {
     },
 
     /**
-     * Déconnecte l'utilisateur (optionnel selon ton implémentation backend)
+     * Vérifie l'email d'un utilisateur avec un token
+     * @param {string} token 
+     */
+    verifyEmail: async (token) => {
+        const response = await apiClient.get(`/auth/verify-email?token=${token}`);
+        return response.data;
+    },
+
+    /**
+     * Déconnecte l'utilisateur
      */
     logout: async () => {
-        // Si tu as un endpoint de logout ou si tu nettoies juste le localStorage
         localStorage.removeItem("token");
     },
 };

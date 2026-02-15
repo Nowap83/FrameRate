@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// Création d'une instance Axios centralisée
+// instance Axios centralisée
 const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api",
     headers: {
@@ -8,7 +8,7 @@ const apiClient = axios.create({
     },
 });
 
-// Intercepteur pour l'authentification (utile plus tard pour le JWT)
+// injection du token JWT
 apiClient.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
