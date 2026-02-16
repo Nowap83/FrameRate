@@ -16,7 +16,7 @@ const Header = () => {
                     FrameRate
                 </Link>
 
-                {/* navigation */}
+                {/* nav */}
                 <nav className="hidden md:flex items-center gap-6">
                     <Link to="/movies" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Films</Link>
                     <Link to="/lists" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Lists</Link>
