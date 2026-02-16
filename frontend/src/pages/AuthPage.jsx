@@ -8,10 +8,12 @@ import Input from "../components/Input";
 import { AUTH_MOVIES } from "../data/authMovies";
 import { loginSchema, registerSchema } from "../validators/auth";
 import { authService } from "../api/auth";
+import { useAuth } from "../context/AuthContext";
 
 const AuthPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const isLogin = location.pathname === "/login";
     const [currentMovieIndex, setCurrentMovieIndex] = useState(0);
@@ -43,9 +45,17 @@ const AuthPage = () => {
         setApiError(null);
         try {
             if (isLogin) {
-                const response = await authService.login(data);
-                console.log("Login Success:", response);
-                localStorage.setItem("token", response.token);
+                const response = await authService.login({
+                    login: data.email,
+                    password: data.password
+                });
+                console.log("Full Login Response:", response);
+                if (!response.token || !response.user) {
+                    console.error("Missing token or user in response", response);
+                    setApiError("Invalid response from server");
+                    return;
+                }
+                login(response.user, response.token);
                 navigate("/");
             } else {
                 const response = await authService.register(data);
