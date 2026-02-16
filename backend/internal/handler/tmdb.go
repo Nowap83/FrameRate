@@ -46,6 +46,26 @@ func (h *TMDBHandler) SearchMovies(c *gin.Context) {
 	})
 }
 
+// * @param: ?page=1&language=fr-FR
+func (h *TMDBHandler) GetPopularMovies(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	language := c.DefaultQuery("language", "en-US")
+
+	results, err := h.tmdbService.GetPopularMovies(page, language)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch popular movies",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    results,
+	})
+}
+
 // * @param: ?language=fr-FR (optionnel)
 func (h *TMDBHandler) GetMovieDetails(c *gin.Context) {
 

@@ -52,6 +52,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 		tmdb := api.Group("/tmdb")
 		{
 			tmdb.GET("/search", tmdbHandler.SearchMovies)
+			tmdb.GET("/popular", tmdbHandler.GetPopularMovies)
 			tmdb.GET("/movie/:id", tmdbHandler.GetMovieDetails)
 			tmdb.GET("/movie/:id/credits", tmdbHandler.GetMovieCredits)
 			tmdb.GET("/image", tmdbHandler.GetImageURL)
