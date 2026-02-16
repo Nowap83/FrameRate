@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Nowap83/FrameRate/backend/internal/dto"
+	"github.com/Nowap83/FrameRate/backend/internal/utils"
 )
 
 type TMDBService struct {
@@ -17,9 +19,10 @@ type TMDBService struct {
 	baseURL      string
 	imageBaseURL string
 	client       *http.Client
+	cache        *CacheService
 }
 
-func NewTMDBService() *TMDBService {
+func NewTMDBService(cache *CacheService) *TMDBService {
 	return &TMDBService{
 		apiKey:       os.Getenv("TMDB_API_KEY"),
 		baseURL:      os.Getenv("TMDB_BASE_URL"),
@@ -27,6 +30,7 @@ func NewTMDBService() *TMDBService {
 		client: &http.Client{
 			Timeout: 10 * time.Second,
 		},
+		cache: cache,
 	}
 }
 
@@ -37,6 +41,18 @@ func (s *TMDBService) SearchMovies(query dto.SearchMoviesRequest) (*dto.TMDBSear
 	}
 	if query.Language == "" {
 		query.Language = "fr-FR"
+	}
+
+	// clé du cache
+	cacheKey := fmt.Sprintf("tmdb:search:%s:%d:%s", query.Query, query.Page, query.Language)
+	var cachedResult dto.TMDBSearchResponse
+
+	if s.cache != nil {
+		found, err := s.cache.Get(context.Background(), cacheKey, &cachedResult)
+		if err == nil && found {
+			utils.Log.Info(fmt.Sprintf("Cache hit for search: %s", query.Query))
+			return &cachedResult, nil
+		}
 	}
 
 	// build de l'url
@@ -74,6 +90,11 @@ func (s *TMDBService) SearchMovies(query dto.SearchMoviesRequest) (*dto.TMDBSear
 		return nil, fmt.Errorf("failed to decode TMDB response: %w", err)
 	}
 
+	// store dans cache (15min pour les recherches)
+	if s.cache != nil {
+		_ = s.cache.Set(context.Background(), cacheKey, result, 15*time.Minute)
+	}
+
 	return &result, nil
 }
 
@@ -83,8 +104,20 @@ func (s *TMDBService) GetMovieDetails(tmdbID int, language string) (*dto.TMDBMov
 		language = "en-US"
 	}
 
-	// build de l'url
-	url := fmt.Sprintf("%s/movie/%d?language=%s", s.baseURL, tmdbID, language)
+	// clé du cache
+	cacheKey := fmt.Sprintf("tmdb:movie:%d:%s", tmdbID, language)
+	var cachedResult dto.TMDBMovieDetails
+
+	if s.cache != nil {
+		found, err := s.cache.Get(context.Background(), cacheKey, &cachedResult)
+		if err == nil && found {
+			utils.Log.Info(fmt.Sprintf("Cache hit for aggregated movie details: %d", tmdbID))
+			return &cachedResult, nil
+		}
+	}
+
+	// build de l'url avec append_to_response
+	url := fmt.Sprintf("%s/movie/%d?language=%s&append_to_response=credits", s.baseURL, tmdbID, language)
 
 	// requete http
 	httpReq, err := http.NewRequest("GET", url, nil)
@@ -114,10 +147,27 @@ func (s *TMDBService) GetMovieDetails(tmdbID int, language string) (*dto.TMDBMov
 		return nil, fmt.Errorf("failed to decode TMDB response: %w", err)
 	}
 
+	// store dans cache (24h pour les détails)
+	if s.cache != nil {
+		_ = s.cache.Set(context.Background(), cacheKey, result, 24*time.Hour)
+	}
+
 	return &result, nil
 }
 
 func (s *TMDBService) GetMovieCredits(tmdbID int) (*dto.TMDBCredits, error) {
+	// clé du cache
+	cacheKey := fmt.Sprintf("tmdb:credits:%d", tmdbID)
+	var cachedResult dto.TMDBCredits
+
+	if s.cache != nil {
+		found, err := s.cache.Get(context.Background(), cacheKey, &cachedResult)
+		if err == nil && found {
+			utils.Log.Info(fmt.Sprintf("Cache hit for movie credits: %d", tmdbID))
+			return &cachedResult, nil
+		}
+	}
+
 	// build de l'url
 	url := fmt.Sprintf("%s/movie/%d/credits", s.baseURL, tmdbID)
 
@@ -147,6 +197,11 @@ func (s *TMDBService) GetMovieCredits(tmdbID int) (*dto.TMDBCredits, error) {
 	var result dto.TMDBCredits
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, fmt.Errorf("failed to decode TMDB response: %w", err)
+	}
+
+	// store dans cache (24h pour les crédits)
+	if s.cache != nil {
+		_ = s.cache.Set(context.Background(), cacheKey, result, 24*time.Hour)
 	}
 
 	return &result, nil

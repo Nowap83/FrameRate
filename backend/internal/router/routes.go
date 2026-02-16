@@ -10,17 +10,19 @@ import (
 
 	"net/http"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
-func SetupRoutes(r *gin.Engine, db *gorm.DB, emailService *utils.EmailService) {
+func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *utils.EmailService) {
 
 	userRepo := repository.NewUserRepository(db)
 	authService := service.NewAuthService(userRepo, emailService)
 
 	authHandler := handler.NewAuthHandler(authService)
 
-	tmdbService := service.NewTMDBService()
+	cacheService := service.NewCacheService(rdb)
+	tmdbService := service.NewTMDBService(cacheService)
 
 	tmdbHandler := handler.NewTMDBHandler(tmdbService)
 

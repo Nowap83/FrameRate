@@ -49,6 +49,13 @@ func main() {
 
 	database.AutoMigrateAll(db)
 
+	rdb, err := database.ConnectRedis()
+	if err != nil {
+		utils.Log.Warn("Redis connection failed, continuing without cache", zap.Error(err))
+	} else {
+		defer rdb.Close()
+	}
+
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		internalValidator.RegisterCustomValidators(v)
 	}
@@ -65,7 +72,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	router.SetupRoutes(r, db, emailService)
+	router.SetupRoutes(r, db, rdb, emailService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
