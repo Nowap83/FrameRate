@@ -24,6 +24,10 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, emailService *utils.EmailService) {
 
 	tmdbHandler := handler.NewTMDBHandler(tmdbService)
 
+	movieRepo := repository.NewMovieRepository(db)
+	movieService := service.NewMovieService(movieRepo, tmdbService)
+	movieHandler := handler.NewMovieHandler(movieService)
+
 	// Health check (verif serveur)
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -62,6 +66,14 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, emailService *utils.EmailService) {
 				users.PUT("/me", authHandler.UpdateProfile)
 				users.PUT("/me/password", authHandler.ChangePassword)
 				users.DELETE("/me", authHandler.DeleteAccount)
+			}
+
+			// Movies (tracking, rating, review)
+			movies := protected.Group("/movies")
+			{
+				movies.POST("/:tmdb_id/track", movieHandler.TrackMovie)
+				movies.POST("/:tmdb_id/rate", movieHandler.RateMovie)
+				movies.POST("/:tmdb_id/review", movieHandler.ReviewMovie)
 			}
 		}
 	}
