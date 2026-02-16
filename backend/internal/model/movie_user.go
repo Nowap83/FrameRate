@@ -26,3 +26,15 @@ type Rate struct {
 	User  User  `gorm:"foreignKey:UserID"`
 	Movie Movie `gorm:"foreignKey:MovieID"`
 }
+
+type Review struct {
+	UserID    uint   `gorm:"primaryKey"`
+	MovieID   uint   `gorm:"primaryKey"`
+	Content   string `gorm:"type:text;not null"`
+	IsSpoiler bool   `gorm:"default:false"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	User  User  `gorm:"foreignKey:UserID"`
+	Movie Movie `gorm:"foreignKey:MovieID"`
+}

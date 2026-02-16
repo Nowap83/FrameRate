@@ -25,6 +25,7 @@ func AutoMigrateAll(db *gorm.DB) {
 		&model.MovieCrew{},
 		&model.Track{},
 		&model.Rate{},
+		&model.Review{},
 	)
 
 	if err != nil {
