@@ -19,21 +19,22 @@ type TMDBSearchResponse struct {
 }
 
 type TMDBMovieDetails struct {
-	ID               int         `json:"id"`
-	Title            string      `json:"title"`
-	OriginalTitle    string      `json:"original_title"`
-	Overview         string      `json:"overview"`
-	ReleaseDate      string      `json:"release_date"`
-	Runtime          int         `json:"runtime"`
-	Budget           int64       `json:"budget"`
-	Revenue          int64       `json:"revenue"`
-	PosterPath       *string     `json:"poster_path"`
-	BackdropPath     *string     `json:"backdrop_path"`
-	VoteAverage      float64     `json:"vote_average"`
-	VoteCount        int         `json:"vote_count"`
-	ImdbID           string      `json:"imdb_id"`
-	OriginalLanguage string      `json:"original_language"`
-	Genres           []TMDBGenre `json:"genres"`
+	ID               int          `json:"id"`
+	Title            string       `json:"title"`
+	OriginalTitle    string       `json:"original_title"`
+	Overview         string       `json:"overview"`
+	ReleaseDate      string       `json:"release_date"`
+	Runtime          int          `json:"runtime"`
+	Budget           int64        `json:"budget"`
+	Revenue          int64        `json:"revenue"`
+	PosterPath       *string      `json:"poster_path"`
+	BackdropPath     *string      `json:"backdrop_path"`
+	VoteAverage      float64      `json:"vote_average"`
+	VoteCount        int          `json:"vote_count"`
+	ImdbID           string       `json:"imdb_id"`
+	OriginalLanguage string       `json:"original_language"`
+	Genres           []TMDBGenre  `json:"genres"`
+	Credits          *TMDBCredits `json:"credits,omitempty"`
 }
 
 type TMDBGenre struct {
