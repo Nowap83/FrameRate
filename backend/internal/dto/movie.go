@@ -76,11 +76,18 @@ type CountryResponse struct {
 }
 
 type UserInteractionResponse struct {
-	IsWatched   bool       `json:"is_watched"`
-	IsFavorite  bool       `json:"is_favorite"`
-	IsWatchlist bool       `json:"is_watchlist"`
-	UserRating  *float32   `json:"user_rating,omitempty"`
-	WatchedDate *time.Time `json:"watched_date,omitempty"`
+	IsWatched   bool            `json:"is_watched"`
+	IsFavorite  bool            `json:"is_favorite"`
+	IsWatchlist bool            `json:"is_watchlist"`
+	UserRating  *float32        `json:"user_rating,omitempty"`
+	UserReview  *ReviewResponse `json:"user_review,omitempty"`
+	WatchedDate *time.Time      `json:"watched_date,omitempty"`
+}
+
+type MovieReviewResponse struct {
+	Content   string    `json:"content"`
+	IsSpoiler bool      `json:"is_spoiler"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type TrackMovieRequest struct {
@@ -92,4 +99,15 @@ type TrackMovieRequest struct {
 
 type RateMovieRequest struct {
 	Rating float32 `json:"rating" binding:"required,min=0,max=5"`
+}
+
+type ReviewRequest struct {
+	Content   string `json:"content" binding:"required"`
+	IsSpoiler bool   `json:"is_spoiler"`
+}
+
+type ReviewResponse struct {
+	Content   string    `json:"content"`
+	IsSpoiler bool      `json:"is_spoiler"`
+	CreatedAt time.Time `json:"created_at"`
 }
