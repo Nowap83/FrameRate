@@ -3,4 +3,18 @@
 @theme {
   --color-mint: #BDF4DF;
   --color-header-bg: #12201B;
+  --color-emerald-dark: #0A1410;
+  --color-emerald-glow: #1a3d32;
+  --font-display: "Clash Display", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+body {
+    background-color: var(--color-header-bg);
+    color: white;
+    font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
 }
