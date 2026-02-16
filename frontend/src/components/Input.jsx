@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
-const Input = ({ label, error, type = "text", className = "", ...rest }) => {
+const Input = React.forwardRef(({ label, error, type = "text", className = "", ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === "password";
 
@@ -20,7 +20,8 @@ const Input = ({ label, error, type = "text", className = "", ...rest }) => {
             )}
             <div className="relative group">
                 <input
-                    {...rest}
+                    {...props}
+                    ref={ref}
                     type={inputType}
                     className={`w-full bg-white/5 border ${error ? "border-red-500/50" : "border-white/10"
                         } text-white text-sm rounded-lg p-3 outline-none 
@@ -40,6 +41,6 @@ const Input = ({ label, error, type = "text", className = "", ...rest }) => {
             {error && <span className="text-xs text-red-500 ml-1">{error}</span>}
         </div>
     );
-};
+});
 
 export default Input;

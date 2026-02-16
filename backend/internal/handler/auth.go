@@ -44,15 +44,15 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		switch err.Error() {
 		case "email already exists":
 			c.JSON(http.StatusConflict, gin.H{
-				"errors": map[string]string{"email": "email already exists"},
+				"errors": map[string]string{"email": "Email already exists"},
 			})
 		case "username already exists":
 			c.JSON(http.StatusConflict, gin.H{
-				"errors": map[string]string{"username": "username already exists"},
+				"errors": map[string]string{"username": "Username already exists"},
 			})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "registration failed",
+				"error": "Registration failed",
 			})
 		}
 		return
