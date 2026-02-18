@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 const LandingPage = () => {
     return (
-        <div className="min-h-screen bg-[#12201B] text-white selection:bg-mint selection:text-black">
+        <div className="min-h-screen text-white selection:bg-mint selection:text-black">
             {/* hero section */}
             <section className="relative h-screen flex items-center justify-center overflow-hidden">
                 {/* background gradient/mesh */}
