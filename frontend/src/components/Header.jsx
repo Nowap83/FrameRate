@@ -1,40 +1,88 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import Button from "./Button";
 import SearchBar from "./SearchBar";
+import { LogOut, User, Menu } from "lucide-react";
 
 const Header = () => {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate("/");
+    };
+
     return (
-        <header className="bg-header-bg py-4 px-6 flex items-center justify-between shadow-lg">
-            <div className="flex items-center gap-8">
-                {/* logo mock */}
-                <Link to="/" className="flex items-center gap-2 text-white font-bold text-xl">
-                    <div className="text-mint">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4zM7 18H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V8h2v2zm4 8H9v-2h2v2zm0-4H9v-2h2v2zm0-4H9V8h2v2zm4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V8h2v2zm4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V8h2v2z" />
-                        </svg>
-                    </div>
-                    FrameRate
-                </Link>
+        <header className="bg-[#12201B]/90 backdrop-blur-md sticky top-0 z-50 py-4 px-6 border-b border-white/5">
+            <div className="container mx-auto flex items-center justify-between">
 
-                {/* nav */}
-                <nav className="hidden md:flex items-center gap-6">
-                    <Link to="/movies" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Films</Link>
-                    <Link to="/lists" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Lists</Link>
-                    <Link to="/community" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Community</Link>
-                </nav>
-            </div>
+                <div className="flex items-center gap-8">
+                    {/* logo */}
+                    <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
+                        <div className="w-8 h-8 bg-mint rounded-lg flex items-center justify-center text-[#12201B]">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z" />
+                                <rect x="5" y="14" width="2" height="2" fill="currentColor" fillOpacity="0.3" />
+                                <rect x="5" y="10" width="2" height="2" fill="currentColor" fillOpacity="0.3" />
+                                <rect x="17" y="14" width="2" height="2" fill="currentColor" fillOpacity="0.3" />
+                                <rect x="17" y="10" width="2" height="2" fill="currentColor" fillOpacity="0.3" />
+                            </svg>
+                        </div>
+                        <span className="font-display text-white">FrameRate</span>
+                    </Link>
 
-            <div className="flex items-center gap-6 flex-1 max-w-2xl ml-8">
-                <SearchBar className="flex-1" />
-            </div>
+                    {/* nav */}
+                    <nav className="hidden md:flex items-center gap-6">
+                        <Link to="/movies" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Films</Link>
+                        <Link to="/lists" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Lists</Link>
+                        <Link to="/community" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Community</Link>
+                    </nav>
+                </div>
 
-            <div className="flex items-center gap-3">
-                <Link to="/login">
-                    <Button className="bg-opacity-80 px-4 py-2 text-sm">Sign In</Button>
-                </Link>
-                <Link to="/register">
-                    <Button className="px-4 py-2 text-sm">Register</Button>
-                </Link>
+                {/* search bar */}
+                <div className="hidden md:block flex-1 max-w-xl px-8">
+                    <SearchBar />
+                </div>
+
+                {/* right actions */}
+                <div className="flex items-center gap-4">
+                    {user ? (
+                        <>
+                            <div className="hidden md:flex items-center gap-3">
+                                {/* User Menu mock */}
+                                <div className="flex items-center gap-2 cursor-pointer hover:bg-white/5 px-2 py-1 rounded-full transition-colors">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-mint to-emerald-600 flex items-center justify-center text-[#12201B] font-bold text-xs ring-2 ring-[#12201B]">
+                                        {user.username?.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="text-sm font-medium hidden lg:block">{user.username}</span>
+                                </div>
+
+                                <button
+                                    onClick={handleLogout}
+                                    className="p-2 text-gray-400 hover:text-white hover:bg-red-500/10 hover:text-red-400 rounded-full transition-all"
+                                    title="Logout"
+                                >
+                                    <LogOut size={20} />
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex items-center gap-3">
+                            <Link to="/login" className="text-gray-300 hover:text-white font-medium text-sm px-3 py-2">
+                                Sign In
+                            </Link>
+                            <Link to="/register">
+                                <Button className="px-5 py-2 text-sm rounded-full">Get Started</Button>
+                            </Link>
+                        </div>
+                    )}
+
+                    {/* mobile menu button */}
+                    <button className="md:hidden p-2 text-gray-300">
+                        <Menu size={24} />
+                    </button>
+                </div>
             </div>
         </header>
     );

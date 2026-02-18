@@ -98,6 +98,66 @@ func (s *TMDBService) SearchMovies(query dto.SearchMoviesRequest) (*dto.TMDBSear
 	return &result, nil
 }
 
+func (s *TMDBService) GetPopularMovies(page int, language string) (*dto.TMDBSearchResponse, error) {
+	// valeurs par défaut
+	if page < 1 {
+		page = 1
+	}
+	if language == "" {
+		language = "en-US"
+	}
+
+	// clé du cache
+	cacheKey := fmt.Sprintf("tmdb:popular:%d:%s", page, language)
+	var cachedResult dto.TMDBSearchResponse
+
+	if s.cache != nil {
+		found, err := s.cache.Get(context.Background(), cacheKey, &cachedResult)
+		if err == nil && found {
+			utils.Log.Info(fmt.Sprintf("Cache hit for popular movies page %d", page))
+			return &cachedResult, nil
+		}
+	}
+
+	// build de l'url
+	url := fmt.Sprintf("%s/movie/popular?page=%d&language=%s", s.baseURL, page, language)
+
+	// requete http
+	httpReq, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.apiKey))
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	// execution de la requete
+	resp, err := s.client.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("TMDB API request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("TMDB API returned status %d: %s",
+			resp.StatusCode, string(bodyBytes))
+	}
+
+	// parser response json
+	var result dto.TMDBSearchResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode TMDB response: %w", err)
+	}
+
+	// store dans cache (6h pour les populaires)
+	if s.cache != nil {
+		_ = s.cache.Set(context.Background(), cacheKey, result, 6*time.Hour)
+	}
+
+	return &result, nil
+}
+
 func (s *TMDBService) GetMovieDetails(tmdbID int, language string) (*dto.TMDBMovieDetails, error) {
 	// valeurs par défaut
 	if language == "" {
