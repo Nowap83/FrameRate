@@ -4,78 +4,66 @@ import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/apiClient';
 import { Link } from 'react-router-dom';
 import { Settings, Share2, Heart, Activity, Calendar, MapPin, Film, User, Star, Globe } from 'lucide-react';
+import { getAvatarUrl } from '../utils/image';
 
 const ProfileHeader = ({ user }) => (
-    <div className="relative mb-24">
-        {/* Banner Image */}
-        <div className="h-64 md:h-80 w-full overflow-hidden rounded-b-3xl relative group">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--color-body-bg)]/80 z-10 pointer-events-none" />
-            <img
-                src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2070&auto=format&fit=crop"
-                alt="Profile Banner"
-                className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-105"
-            />
+    <div className="relative mb-12 mt-24 px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row items-end gap-6">
+        <div className="relative group">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-[var(--color-body-bg)] shadow-2xl">
+                <img
+                    src={getAvatarUrl(user?.profile_picture_url) || `https://ui-avatars.com/api/?name=${user?.username}&background=random`}
+                    alt={user?.username}
+                    className="w-full h-full object-cover rounded-full border-4 border-[var(--color-body-bg)]"
+                />
+            </div>
+            <div className="absolute bottom-2 right-2 bg-[var(--color-primary)] text-black p-1.5 rounded-full border-2 border-[var(--color-body-bg)] shadow-lg">
+                <Star size={14} fill="currentColor" />
+            </div>
         </div>
 
-        {/* Profile Info Overlay */}
-        <div className="absolute -bottom-16 left-0 right-0 px-4 md:px-12 flex flex-col md:flex-row items-end gap-6 z-20 max-w-7xl mx-auto">
-            <div className="relative group">
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-[var(--color-body-bg)] shadow-2xl">
-                    <img
-                        src={user?.profile_picture_url || `https://ui-avatars.com/api/?name=${user?.username}&background=random`}
-                        alt={user?.username}
-                        className="w-full h-full object-cover rounded-full border-4 border-[var(--color-body-bg)]"
-                    />
-                </div >
-                <div className="absolute bottom-2 right-2 bg-[var(--color-primary)] text-black p-1.5 rounded-full border-2 border-[var(--color-body-bg)] shadow-lg">
-                    <Star size={14} fill="currentColor" />
-                </div>
-            </div >
+        <div className="flex-1 pb-2 text-center md:text-left">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
+                {user?.given_name ? `${user.given_name} ${user.family_name || ''}` : user?.username}
+            </h1>
+            {user?.given_name && <p className="text-gray-500 font-mono text-sm mb-2">@{user?.username}</p>}
 
-            <div className="flex-1 pb-2 text-center md:text-left">
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
-                    {user?.given_name ? `${user.given_name} ${user.family_name || ''}` : user?.username}
-                </h1>
-                {user?.given_name && <p className="text-gray-500 font-mono text-sm mb-2">@{user?.username}</p>}
+            <p className="text-gray-400 mb-4 max-w-2xl text-lg leading-relaxed line-clamp-2">
+                {user?.bio}
+            </p>
 
-                <p className="text-gray-400 mb-4 max-w-2xl text-lg leading-relaxed line-clamp-2">
-                    {user?.bio || "Film enthusiast & critic. Exploring the world through the lens, one frame at a time."}
-                </p>
-
-                <div className="flex items-center justify-center md:justify-start gap-6 text-sm text-gray-400 font-medium flex-wrap">
-                    {user?.location && (
-                        <span className="flex items-center gap-1.5">
-                            <MapPin size={16} className="text-[var(--color-primary)]" />
-                            {user.location}
-                        </span>
-                    )}
-                    {user?.website && (
-                        <a href={user.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-white transition-colors">
-                            <Globe size={16} className="text-[var(--color-primary)]" />
-                            Website
-                        </a>
-                    )}
+            <div className="flex items-center justify-center md:justify-start gap-6 text-sm text-gray-400 font-medium flex-wrap">
+                {user?.location && (
                     <span className="flex items-center gap-1.5">
-                        <Calendar size={16} className="text-[var(--color-primary)]" />
-                        Joined {new Date(user?.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+                        <MapPin size={16} className="text-[var(--color-primary)]" />
+                        {user.location}
                     </span>
-                </div>
+                )}
+                {user?.website && (
+                    <a href={user.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-white transition-colors">
+                        <Globe size={16} className="text-[var(--color-primary)]" />
+                        Website
+                    </a>
+                )}
+                <span className="flex items-center gap-1.5">
+                    <Calendar size={16} className="text-[var(--color-primary)]" />
+                    Joined {new Date(user?.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+                </span>
             </div>
+        </div>
 
-            <div className="flex gap-3 pb-4 w-full md:w-auto justify-center md:justify-end">
-                <Link
-                    to="/settings"
-                    className="flex items-center gap-2 px-6 py-2.5 bg-[#BDF4DF] text-black font-bold rounded-full hover:bg-[#a6e6ce] transition-all hover:scale-105 shadow-[0_0_20px_rgba(189,244,223,0.3)]"
-                >
-                    <Settings size={18} />
-                    Edit Profile
-                </Link>
-                <button className="p-2.5 bg-white/5 backdrop-blur-md text-white rounded-full hover:bg-white/10 transition-all border border-white/10 hover:border-white/20">
-                    <Share2 size={20} />
-                </button>
-            </div>
-        </div >
-    </div >
+        <div className="flex gap-3 pb-4 w-full md:w-auto justify-center md:justify-end">
+            <Link
+                to="/settings"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#BDF4DF] text-black font-bold rounded-full hover:bg-[#a6e6ce] transition-all hover:scale-105 shadow-[0_0_20px_rgba(189,244,223,0.3)]"
+            >
+                <Settings size={18} />
+                Edit Profile
+            </Link>
+            <button className="p-2.5 bg-white/5 backdrop-blur-md text-white rounded-full hover:bg-white/10 transition-all border border-white/10 hover:border-white/20">
+                <Share2 size={20} />
+            </button>
+        </div>
+    </div>
 );
 
 const StatsCard = ({ label, value, subtext, trend }) => (
@@ -179,8 +167,8 @@ const Profile = () => {
             <div className="max-w-7xl mx-auto px-4 md:px-8">
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-16">
-                    <StatsCard label="Total Films" value={stats?.total_films ? stats.total_films.toLocaleString() : 0} trend="+12%" />
-                    <StatsCard label="Movies This Year" value={stats?.movies_this_year || 0} subtext="2026" />
+                    <StatsCard label="Total Films" value={stats?.total_films ? stats.total_films.toLocaleString() : 0} />
+                    <StatsCard label="Movies This Year" value={stats?.movies_this_year || 0} trend="2026" />
                     <StatsCard label="Reviews" value={stats?.reviews || 0} />
                     <StatsCard label="Following" value={stats?.following || 0} />
                     <StatsCard label="Followers" value={stats?.followers || 0} />

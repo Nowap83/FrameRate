@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Button from "./Button";
-import SearchBar from "./SearchBar";
+import MovieSearch from "./MovieSearch";
 import { LogOut, User, Menu } from "lucide-react";
+import { getAvatarUrl } from "../utils/image";
 
 const Header = () => {
     const { user, logout } = useAuth();
@@ -11,6 +12,10 @@ const Header = () => {
     const handleLogout = () => {
         logout();
         navigate("/");
+    };
+
+    const handleMovieSelect = (movie) => {
+        navigate(`/movies/${movie.id}`);
     };
 
     return (
@@ -42,21 +47,33 @@ const Header = () => {
 
                 {/* search bar */}
                 <div className="hidden md:block flex-1 max-w-xl px-8">
-                    <SearchBar />
+                    <MovieSearch onSelect={handleMovieSelect} placeholder="Search movies..." />
                 </div>
 
                 {/* right actions */}
                 <div className="flex items-center gap-4">
                     {user ? (
                         <>
+
                             <div className="hidden md:flex items-center gap-3">
-                                {/* User Menu mock */}
-                                <div className="flex items-center gap-2 cursor-pointer hover:bg-white/5 px-2 py-1 rounded-full transition-colors">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-mint to-emerald-600 flex items-center justify-center text-[#12201B] font-bold text-xs ring-2 ring-[#12201B]">
-                                        {user.username?.charAt(0).toUpperCase()}
+                                {/* User Menu */}
+                                <Link to="/profile">
+                                    <div className="flex items-center gap-2 cursor-pointer hover:bg-white/5 px-2 py-1 rounded-full transition-colors">
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-mint to-emerald-600 flex items-center justify-center text-[#12201B] font-bold text-xs ring-2 ring-[#12201B] overflow-hidden">
+                                            {user.profile_picture_url ? (
+                                                <img
+                                                    src={getAvatarUrl(user.profile_picture_url)}
+                                                    alt={user.username}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                user.username?.charAt(0).toUpperCase()
+                                            )}
+                                        </div>
+                                        <span className="text-sm font-medium hidden lg:block">{user.username}</span>
                                     </div>
-                                    <span className="text-sm font-medium hidden lg:block">{user.username}</span>
-                                </div>
+                                </Link>
+
 
                                 <button
                                     onClick={handleLogout}
