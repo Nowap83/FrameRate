@@ -30,6 +30,9 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 	movieService := service.NewMovieService(movieRepo, tmdbService)
 	movieHandler := handler.NewMovieHandler(movieService)
 
+	userService := service.NewUserService(userRepo, movieRepo)
+	userHandler := handler.NewUserHandler(userService)
+
 	// Health check (verif serveur)
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -55,6 +58,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 			tmdb.GET("/popular", tmdbHandler.GetPopularMovies)
 			tmdb.GET("/movie/:id", tmdbHandler.GetMovieDetails)
 			tmdb.GET("/movie/:id/credits", tmdbHandler.GetMovieCredits)
+			tmdb.GET("/movie/:id/videos", tmdbHandler.GetMovieVideos)
 			tmdb.GET("/image", tmdbHandler.GetImageURL)
 		}
 
@@ -65,10 +69,10 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 			// Users
 			users := protected.Group("/users")
 			{
-				users.GET("/me", authHandler.GetProfile)
-				users.PUT("/me", authHandler.UpdateProfile)
-				users.PUT("/me/password", authHandler.ChangePassword)
-				users.DELETE("/me", authHandler.DeleteAccount)
+				users.GET("/me", userHandler.GetProfile)
+				users.PUT("/me", userHandler.UpdateProfile)
+				users.PUT("/me/password", userHandler.ChangePassword)
+				users.DELETE("/me", userHandler.DeleteAccount)
 			}
 
 			// Movies (tracking, rating, review)

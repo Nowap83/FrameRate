@@ -267,6 +267,58 @@ func (s *TMDBService) GetMovieCredits(tmdbID int) (*dto.TMDBCredits, error) {
 	return &result, nil
 }
 
+func (s *TMDBService) GetMovieVideos(tmdbID int) (*dto.TMDBVideoResponse, error) {
+	// clé du cache
+	cacheKey := fmt.Sprintf("tmdb:videos:%d", tmdbID)
+	var cachedResult dto.TMDBVideoResponse
+
+	if s.cache != nil {
+		found, err := s.cache.Get(context.Background(), cacheKey, &cachedResult)
+		if err == nil && found {
+			utils.Log.Info(fmt.Sprintf("Cache hit for movie videos: %d", tmdbID))
+			return &cachedResult, nil
+		}
+	}
+
+	// build de l'url
+	url := fmt.Sprintf("%s/movie/%d/videos", s.baseURL, tmdbID)
+
+	// requete http
+	httpReq, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.apiKey))
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	// execution de la requete
+	resp, err := s.client.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("TMDB API request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("TMDB API returned status %d: %s",
+			resp.StatusCode, string(bodyBytes))
+	}
+
+	// parser response json
+	var result dto.TMDBVideoResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode TMDB response: %w", err)
+	}
+
+	// store dans cache (24h pour les vidéos)
+	if s.cache != nil {
+		_ = s.cache.Set(context.Background(), cacheKey, result, 24*time.Hour)
+	}
+
+	return &result, nil
+}
+
 // helper pour construire les URLs d'images
 func (s *TMDBService) GetImageURL(path string, size string) string {
 	if path == "" {

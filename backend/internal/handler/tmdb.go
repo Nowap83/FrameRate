@@ -119,6 +119,31 @@ func (h *TMDBHandler) GetMovieCredits(c *gin.Context) {
 	})
 }
 
+func (h *TMDBHandler) GetMovieVideos(c *gin.Context) {
+
+	tmdbID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid movie ID",
+		})
+		return
+	}
+
+	videos, err := h.tmdbService.GetMovieVideos(tmdbID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch movie videos",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    videos,
+	})
+}
+
 // * @param: ?path=/abc.jpg&size=w500
 func (h *TMDBHandler) GetImageURL(c *gin.Context) {
 	path := c.Query("path")
