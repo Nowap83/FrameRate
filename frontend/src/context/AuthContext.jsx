@@ -15,8 +15,8 @@ export const AuthProvider = ({ children }) => {
             if (token) {
                 try {
                     const response = await apiClient.get("/users/me");
-                    if (response.data.success) {
-                        setUser(response.data.data);
+                    if (response.data.user) {
+                        setUser(response.data.user);
                     } else {
                         localStorage.removeItem("token");
                     }

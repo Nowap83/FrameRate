@@ -3,11 +3,29 @@
 @theme {
   --color-mint: #BDF4DF;
   --color-header-bg: #12201B;
-  --color-body-bg: #2A3732;
+  --color-body-bg: #121212; /* Darker background */
   --color-emerald-dark: #0A1410;
   --color-emerald-glow: #1a3d32;
+  
+  /* New Tokens */
+  --color-card-bg: rgba(30, 30, 30, 0.6);
+  --color-card-border: rgba(255, 255, 255, 0.1);
+  --color-card-hover: rgba(40, 40, 40, 0.8);
+  --color-primary: #BDF4DF;
+  --color-primary-dark: #9adbc1;
+  
   --font-display: "Clash Display", sans-serif;
   --font-body: "Inter", sans-serif;
+  
+  --glass-bg: rgba(20, 20, 20, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
 }
 
 body {
