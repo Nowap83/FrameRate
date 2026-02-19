@@ -29,6 +29,11 @@ func main() {
 		utils.Log.Fatal("Configuration error", zap.Error(err))
 	}
 
+	// Ensure uploads directory exists
+	if err := os.MkdirAll("./uploads/avatars", 0755); err != nil {
+		utils.Log.Fatal("Failed to create uploads directory", zap.Error(err))
+	}
+
 	db, err := database.ConnectDB()
 	if err != nil {
 		utils.Log.Fatal("Database initialization failed", zap.Error(err))
@@ -71,6 +76,9 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
+
+	// Serve static files
+	r.Static("/uploads", "./uploads")
 
 	router.SetupRoutes(r, db, rdb, emailService)
 

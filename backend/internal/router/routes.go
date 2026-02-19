@@ -71,8 +71,10 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 			{
 				users.GET("/me", userHandler.GetProfile)
 				users.PUT("/me", userHandler.UpdateProfile)
+				users.POST("/me/avatar", userHandler.UploadAvatar)
 				users.PUT("/me/password", userHandler.ChangePassword)
 				users.DELETE("/me", userHandler.DeleteAccount)
+				users.GET("/check-username", userHandler.CheckUsername)
 			}
 
 			// Movies (tracking, rating, review)
