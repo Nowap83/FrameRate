@@ -90,10 +90,8 @@ func (r *MovieRepository) CountReviews(userID uint) (int64, error) {
 
 func (r *MovieRepository) GetFavoriteMovies(userID uint, limit int) ([]model.Movie, error) {
 	var movies []model.Movie
-	err := r.db.Joins("JOIN tracks ON tracks.movie_id = movies.id").
-		Where("tracks.user_id = ? AND tracks.is_favorite = ?", userID, true).
-		Limit(limit).
-		Find(&movies).Error
+	// Use Association to ensure we query the same table as UpdateFavoriteFilms
+	err := r.db.Model(&model.User{ID: userID}).Limit(limit).Association("FavoriteFilms").Find(&movies)
 	return movies, err
 }
 
