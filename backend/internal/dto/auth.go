@@ -24,9 +24,14 @@ type VerifyEmailRequest struct {
 }
 
 type UpdateProfileRequest struct {
-	Username          *string `json:"username,omitempty" binding:"omitempty,username"`
-	Bio               *string `json:"bio,omitempty" binding:"omitempty,max=500"`
-	ProfilePictureURL *string `json:"profile_picture_url,omitempty" binding:"omitempty,url"`
+	Username       *string       `json:"username,omitempty" binding:"omitempty,username"`
+	Bio            *string       `json:"bio,omitempty" binding:"omitempty,max=500"`
+	ProfilePicture *string       `json:"profile_picture_url,omitempty" binding:"omitempty,url"`
+	GivenName      *string       `json:"given_name,omitempty" binding:"omitempty,max=100"`
+	FamilyName     *string       `json:"family_name,omitempty" binding:"omitempty,max=100"`
+	Location       *string       `json:"location,omitempty" binding:"omitempty,max=100"`
+	Website        *string       `json:"website,omitempty" binding:"omitempty,max=255"`
+	FavoriteFilms  []model.Movie `json:"favorite_films,omitempty"` // List of Movies
 }
 
 type ChangePasswordRequest struct {
@@ -37,14 +42,18 @@ type ChangePasswordRequest struct {
 // RESPONSES
 
 type UserResponse struct {
-	ID                uint      `json:"id"`
-	Username          string    `json:"username"`
-	Email             string    `json:"email"`
-	ProfilePictureURL *string   `json:"profile_picture_url,omitempty"`
-	Bio               *string   `json:"bio,omitempty"`
-	IsVerified        bool      `json:"is_verified"`
-	IsAdmin           bool      `json:"is_admin"`
-	CreatedAt         time.Time `json:"created_at"`
+	ID             uint      `json:"id"`
+	Username       string    `json:"username"`
+	Email          string    `json:"email"`
+	ProfilePicture *string   `json:"profile_picture_url,omitempty"`
+	Bio            *string   `json:"bio,omitempty"`
+	GivenName      *string   `json:"given_name,omitempty"`
+	FamilyName     *string   `json:"family_name,omitempty"`
+	Location       *string   `json:"location,omitempty"`
+	Website        *string   `json:"website,omitempty"`
+	IsVerified     bool      `json:"is_verified"`
+	IsAdmin        bool      `json:"is_admin"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type RegisterResponse struct {
@@ -62,8 +71,20 @@ type VerifyEmailResponse struct {
 	Message string       `json:"message"`
 }
 
+type UserStats struct {
+	TotalFilms         int64          `json:"total_films"`
+	MoviesThisYear     int64          `json:"movies_this_year"`
+	Reviews            int64          `json:"reviews"`
+	Following          int64          `json:"following"`
+	Followers          int64          `json:"followers"`
+	RatingDistribution map[string]int `json:"rating_distribution"`
+}
+
 type ProfileResponse struct {
-	User UserResponse `json:"user"`
+	User           UserResponse  `json:"user"`
+	Stats          *UserStats    `json:"stats,omitempty"`
+	Favorites      []model.Movie `json:"favorites,omitempty"`
+	RecentActivity []model.Movie `json:"recent_activity,omitempty"`
 }
 
 type MessageResponse struct {
@@ -74,14 +95,18 @@ type MessageResponse struct {
 
 func ToUserResponse(user *model.User) UserResponse {
 	return UserResponse{
-		ID:                user.ID,
-		Username:          user.Username,
-		Email:             user.Email,
-		ProfilePictureURL: user.ProfilePictureURL,
-		Bio:               user.Bio,
-		IsVerified:        user.IsVerified,
-		IsAdmin:           user.IsAdmin,
-		CreatedAt:         user.CreatedAt,
+		ID:             user.ID,
+		Username:       user.Username,
+		Email:          user.Email,
+		ProfilePicture: user.ProfilePictureURL,
+		Bio:            user.Bio,
+		GivenName:      user.GivenName,
+		FamilyName:     user.FamilyName,
+		Location:       user.Location,
+		Website:        user.Website,
+		IsVerified:     user.IsVerified,
+		IsAdmin:        user.IsAdmin,
+		CreatedAt:      user.CreatedAt,
 	}
 }
 
@@ -99,11 +124,5 @@ func NewVerifyEmailResponse(token string, user *model.User, message string) *Ver
 		Token:   token,
 		User:    ToUserResponse(user),
 		Message: message,
-	}
-}
-
-func NewProfileResponse(user *model.User) *ProfileResponse {
-	return &ProfileResponse{
-		User: ToUserResponse(user),
 	}
 }
