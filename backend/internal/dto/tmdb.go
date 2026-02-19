@@ -76,3 +76,21 @@ type TMDBPersonDetails struct {
 	ProfilePath  *string `json:"profile_path"`
 	Gender       int     `json:"gender"`
 }
+
+type TMDBVideo struct {
+	ID          string `json:"id"`
+	ISO639_1    string `json:"iso_639_1"`
+	ISO3166_1   string `json:"iso_3166_1"`
+	Key         string `json:"key"`
+	Name        string `json:"name"`
+	Site        string `json:"site"`
+	Size        int    `json:"size"`
+	Type        string `json:"type"`
+	Official    bool   `json:"official"`
+	PublishedAt string `json:"published_at"`
+}
+
+type TMDBVideoResponse struct {
+	ID      int         `json:"id"`
+	Results []TMDBVideo `json:"results"`
+}
