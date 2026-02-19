@@ -15,4 +15,9 @@ export const getMovieCredits = async (id) => {
     return response.data;
 };
 
+export const getMovieVideos = async (id) => {
+    const response = await apiClient.get(`/tmdb/movie/${id}/videos`);
+    return response.data;
+};
+
 
