@@ -7,25 +7,25 @@ import (
 )
 
 type Movie struct {
-	ID                  uint   `gorm:"primaryKey"`
-	TmdbID              int    `gorm:"uniqueIndex;not null"`
-	Title               string `gorm:"type:varchar(255);not null"`
-	OriginalTitle       string `gorm:"type:varchar(255)"`
-	ReleaseYear         int    `gorm:"index"`
-	DurationMinutes     int
-	Synopsis            string `gorm:"type:text"`
-	PosterURL           string `gorm:"type:varchar(500)"`
-	BackdropURL         string `gorm:"type:varchar(500)"`
-	TrailerURL          string `gorm:"type:varchar(500)"`
-	Budget              int64
-	Revenue             int64
-	ImdbRating          float32 `gorm:"type:decimal(3,1)"`
-	MetacriticScore     int
-	RottenTomatoesScore int
-	Language            string `gorm:"type:varchar(10)"`
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
-	DeletedAt           gorm.DeletedAt `gorm:"index"`
+	ID                  uint           `gorm:"primaryKey" json:"id"`
+	TmdbID              int            `gorm:"uniqueIndex;not null" json:"tmdb_id"`
+	Title               string         `gorm:"type:varchar(255);not null" json:"title"`
+	OriginalTitle       string         `gorm:"type:varchar(255)" json:"original_title"`
+	ReleaseYear         int            `gorm:"index" json:"release_year"`
+	DurationMinutes     int            `json:"duration_minutes"`
+	Synopsis            string         `gorm:"type:text" json:"synopsis"`
+	PosterURL           string         `gorm:"type:varchar(500)" json:"poster_url"`
+	BackdropURL         string         `gorm:"type:varchar(500)" json:"backdrop_url"`
+	TrailerURL          string         `gorm:"type:varchar(500)" json:"trailer_url"`
+	Budget              int64          `json:"budget"`
+	Revenue             int64          `json:"revenue"`
+	ImdbRating          float32        `gorm:"type:decimal(3,1)" json:"imdb_rating"`
+	MetacriticScore     int            `json:"metacritic_score"`
+	RottenTomatoesScore int            `json:"rotten_tomatoes_score"`
+	Language            string         `gorm:"type:varchar(10)" json:"language"`
+	CreatedAt           time.Time      `json:"created_at"`
+	UpdatedAt           time.Time      `json:"updated_at"`
+	DeletedAt           gorm.DeletedAt `gorm:"index" json:"-"`
 
 	// relations
 	Genres    []Genre     `gorm:"many2many:movie_genres;"`
