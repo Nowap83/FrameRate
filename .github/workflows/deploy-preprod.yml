@@ -59,11 +59,13 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           
           # Configure SSH to use ProxyCommand via cloudflared to access the tunnel hostname
+          # AddressFamily inet prevents the 'dial tcp: lookup *** on 127.0.0.53:53: server misbehaving' error on IPv6
           cat <<EOF > ~/.ssh/config
           Host $SSH_HOST
             ProxyCommand cloudflared access ssh --hostname %h
             StrictHostKeyChecking no
             UserKnownHostsFile /dev/null
+            AddressFamily inet
           EOF
 
       - name: Deploy via SSH
