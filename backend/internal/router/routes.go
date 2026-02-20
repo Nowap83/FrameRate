@@ -59,6 +59,8 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 			tmdb.GET("/movie/:id", tmdbHandler.GetMovieDetails)
 			tmdb.GET("/movie/:id/credits", tmdbHandler.GetMovieCredits)
 			tmdb.GET("/movie/:id/videos", tmdbHandler.GetMovieVideos)
+			tmdb.GET("/person/:id", tmdbHandler.GetPersonDetails)
+			tmdb.GET("/person/:id/credits", tmdbHandler.GetPersonMovieCredits)
 			tmdb.GET("/image", tmdbHandler.GetImageURL)
 		}
 

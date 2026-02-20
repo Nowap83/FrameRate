@@ -8,6 +8,8 @@ import AppLayout from "./layouts/AppLayout"
 import MovieDetails from "./pages/MovieDetails"
 import Profile from "./pages/Profile"
 import Settings from "./pages/Settings"
+import SearchPage from "./pages/SearchPage"
+import PersonDetails from "./pages/PersonDetails"
 import { useAuth } from "./context/AuthContext"
 
 function App() {
@@ -49,6 +51,16 @@ function App() {
       <Route path="/settings" element={
         <AppLayout>
           <Settings />
+        </AppLayout>
+      } />
+      <Route path="/search" element={
+        <AppLayout>
+          <SearchPage />
+        </AppLayout>
+      } />
+      <Route path="/person/:id" element={
+        <AppLayout>
+          <PersonDetails />
         </AppLayout>
       } />
     </Routes>
