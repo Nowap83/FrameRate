@@ -1,21 +1,26 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Button from "./Button";
-import MovieSearch from "./MovieSearch";
-import { LogOut, User, Menu } from "lucide-react";
+import { LogOut, User, Menu, Search } from "lucide-react";
 import { getAvatarUrl } from "../utils/image";
+import { useState } from "react";
 
 const Header = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState("");
 
     const handleLogout = () => {
         logout();
         navigate("/");
     };
 
-    const handleMovieSelect = (movie) => {
-        navigate(`/movies/${movie.id}`);
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+            setSearchQuery("");
+        }
     };
 
     return (
@@ -47,7 +52,20 @@ const Header = () => {
 
                 {/* search bar */}
                 <div className="hidden md:block flex-1 max-w-xl px-8">
-                    <MovieSearch onSelect={handleMovieSelect} placeholder="Search movies..." />
+                    <form onSubmit={handleSearchSubmit} className="relative w-full">
+                        <div className="relative flex items-center">
+                            <span className="absolute left-3 text-gray-400">
+                                <Search size={16} />
+                            </span>
+                            <input
+                                type="text"
+                                placeholder="Search movies..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-white/5 text-sm text-gray-300 py-2 pl-10 pr-4 rounded-full border border-white/10 focus:outline-none focus:border-[var(--color-primary)]/50 transition-colors"
+                            />
+                        </div>
+                    </form>
                 </div>
 
                 {/* right actions */}

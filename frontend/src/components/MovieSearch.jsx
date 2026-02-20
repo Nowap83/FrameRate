@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 import apiClient from '../api/apiClient';
 
@@ -6,6 +6,7 @@ const MovieSearch = ({ onSelect, onCancel, placeholder = "Search for a movie..."
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
+    const searchContainerRef = useRef(null);
 
     useEffect(() => {
         const searchMovies = async () => {
@@ -29,8 +30,23 @@ const MovieSearch = ({ onSelect, onCancel, placeholder = "Search for a movie..."
         return () => clearTimeout(timeoutId);
     }, [query]);
 
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+                setQuery('');
+                if (onCancel) onCancel();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [onCancel]);
+
+
     return (
-        <div className="relative w-full">
+        <div ref={searchContainerRef} className="relative w-full">
             <div className="relative flex items-center">
                 <span className="absolute left-3 text-gray-400">
                     <Search size={16} />
