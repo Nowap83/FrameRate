@@ -45,7 +45,7 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - ./backend/.env
+      - .env
     environment:
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
