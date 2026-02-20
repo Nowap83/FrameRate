@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Button from "./Button";
-import { LogOut, User, Menu, Search } from "lucide-react";
+import { LogOut, User, Menu, Search, ShieldAlert } from "lucide-react";
 import { getAvatarUrl } from "../utils/image";
 import { useState } from "react";
 
@@ -74,6 +74,13 @@ const Header = () => {
                         <>
 
                             <div className="hidden md:flex items-center gap-3">
+                                {/* Admin Menu */}
+                                {user.is_admin && (
+                                    <Link to="/admin" className="p-2 text-gray-400 hover:text-[var(--color-mint)] hover:bg-[var(--color-mint)]/10 rounded-full transition-all" title="Admin Dashboard">
+                                        <ShieldAlert size={20} />
+                                    </Link>
+                                )}
+
                                 {/* User Menu */}
                                 <Link to="/profile">
                                     <div className="flex items-center gap-2 cursor-pointer hover:bg-white/5 px-2 py-1 rounded-full transition-colors">
