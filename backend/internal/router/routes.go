@@ -68,6 +68,14 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 		protected := api.Group("")
 		protected.Use(middleware.AuthRequired())
 		{
+			// Admin routes
+			admin := protected.Group("/admin")
+			admin.Use(middleware.AdminRequired(userRepo))
+			{
+				admin.GET("/users", userHandler.GetAllUsers)
+				admin.DELETE("/users/:id", userHandler.DeleteUserAdmin)
+			}
+
 			// Users
 			users := protected.Group("/users")
 			{

@@ -8,6 +8,7 @@ import (
 type UserRepository interface {
 	Create(user *model.User) error
 	GetByID(id uint) (*model.User, error)
+	GetAllUsers() ([]*model.User, error)
 	GetByEmailOrUsername(login string) (*model.User, error)
 	GetByEmail(email string) (*model.User, error)
 	GetByUsername(username string) (*model.User, error)
@@ -35,6 +36,14 @@ func (r *GormUserRepository) GetByID(id uint) (*model.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *GormUserRepository) GetAllUsers() ([]*model.User, error) {
+	var users []*model.User
+	if err := r.db.Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
 }
 
 func (r *GormUserRepository) GetByEmailOrUsername(login string) (*model.User, error) {

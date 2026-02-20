@@ -5,7 +5,7 @@ import apiClient from "../api/apiClient";
 import { getMovieVideos } from "../api/tmdb";
 import { Play, Star, Plus } from "lucide-react";
 
-const Dashboard = () => {
+const HomePage = () => {
     const [popularMovies, setPopularMovies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
@@ -79,7 +79,7 @@ const Dashboard = () => {
             </header>
 
             {loading ? (
-                <div className="text-center py-20">Loading...</div>
+                <div className="flex justify-center py-20"><div className="loader"></div></div>
             ) : (
                 <div className="relative">
                     {/* hero carousel */}
@@ -211,4 +211,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default HomePage;

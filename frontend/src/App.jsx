@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Route, Routes, Navigate, useLocation } from "react-router-dom"
-import Dashboard from "./pages/Dashboard"
+import HomePage from "./pages/HomePage"
 import LandingPage from "./pages/LandingPage"
 import AuthPage from "./pages/AuthPage"
 import VerifyEmail from "./pages/VerifyEmail"
@@ -10,6 +10,7 @@ import Profile from "./pages/Profile"
 import Settings from "./pages/Settings"
 import SearchPage from "./pages/SearchPage"
 import PersonDetails from "./pages/PersonDetails"
+import AdminDashboard from "./pages/AdminDashboard"
 import { useAuth } from "./context/AuthContext"
 
 function App() {
@@ -21,14 +22,14 @@ function App() {
   }, [pathname]);
 
   if (loading) {
-    return <div className="min-h-screen bg-[var(--color-body-bg)] flex items-center justify-center text-white">Loading...</div>;
+    return <div className="min-h-screen bg-[var(--color-body-bg)] flex items-center justify-center text-white"><div className="loader"></div></div>;
   }
 
   return (
     <Routes>
       <Route path="/" element={
         <AppLayout>
-          {user ? <Dashboard /> : <LandingPage />}
+          {user ? <HomePage /> : <LandingPage />}
         </AppLayout>
       } />
       <Route path="/login" element={user ? <Navigate to="/" /> : <AuthPage />} />
@@ -61,6 +62,11 @@ function App() {
       <Route path="/person/:id" element={
         <AppLayout>
           <PersonDetails />
+        </AppLayout>
+      } />
+      <Route path="/admin" element={
+        <AppLayout>
+          <AdminDashboard />
         </AppLayout>
       } />
     </Routes>
