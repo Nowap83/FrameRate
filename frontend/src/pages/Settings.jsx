@@ -276,7 +276,7 @@ const Settings = () => {
                     </button>
                 </div>
 
-                <div className="bg-[#121212] rounded-2xl border border-white/10 overflow-hidden">
+                <div className="bg-[#121212] rounded-2xl border border-white/10">
 
                     {/* PROFILE TAB */}
                     {activeTab === 'profile' && (

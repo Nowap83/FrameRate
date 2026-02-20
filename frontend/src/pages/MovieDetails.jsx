@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { getMovieDetails, getMovieVideos } from "../api/tmdb";
 import Button from "../components/Button";
 import { Star, Eye, Plus, List, Play, Heart } from "lucide-react";
@@ -85,7 +85,7 @@ const MovieDetails = () => {
                 return (
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         {movie.credits?.cast?.slice(0, 10).map(actor => (
-                            <div key={actor.id} className="group">
+                            <Link key={actor.id} to={`/person/${actor.id}`} className="group block">
                                 <div className="aspect-[2/3] overflow-hidden rounded-lg bg-gray-800 mb-2">
                                     {actor.profile_path ? (
                                         <img
@@ -94,28 +94,28 @@ const MovieDetails = () => {
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">No Image</div>
+                                        <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs text-center border border-white/5 p-2">No Image</div>
                                     )}
                                 </div>
-                                <h4 className="font-bold text-sm truncate">{actor.name}</h4>
+                                <h4 className="font-bold text-sm truncate group-hover:text-mint transition-colors">{actor.name}</h4>
                                 <p className="text-xs text-gray-500 truncate">{actor.character}</p>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 );
-            case "CREW":
-                // Group crew by department or just list top crew
+            case "CREW": {
                 const importantCrew = movie.credits?.crew?.filter(c => ["Directing", "Writing", "Production"].includes(c.department)) || [];
                 return (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {importantCrew.slice(0, 12).map(member => (
-                            <div key={`${member.id}-${member.job}`} className="bg-white/5 p-4 rounded-lg">
+                            <Link key={`${member.id}-${member.job}`} to={`/person/${member.id}`} className="bg-white/5 p-4 rounded-lg block hover:bg-white/10 transition-colors">
                                 <h4 className="font-bold text-sm">{member.name}</h4>
                                 <p className="text-xs text-mint">{member.job}</p>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 );
+            }
             case "DETAILS":
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
@@ -145,7 +145,7 @@ const MovieDetails = () => {
                         ))}
                     </div>
                 );
-            case "RELEASE":
+            case "RELEASE": {
                 const releaseDate = movie.release_date && !isNaN(new Date(movie.release_date).getTime())
                     ? new Date(movie.release_date).toLocaleDateString(undefined, { dateStyle: "long" })
                     : "Unknown Release Date";
@@ -156,6 +156,7 @@ const MovieDetails = () => {
                         <p className="text-3xl font-display">{releaseDate}</p>
                     </div>
                 );
+            }
             default:
                 return null;
         }
@@ -163,10 +164,9 @@ const MovieDetails = () => {
 
     return (
         <div className="min-h-screen bg-[#12201B] text-white font-sans pb-20">
-            {/* Hero Section */}
+            {/* hero section */}
             <div className="relative w-full h-[500px] overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#12201B] z-10" />
-                {/* Gradient overlay for text readability if needed */}
                 {movie.backdrop_path && (
                     <img
                         src={`${IMAGE_BASE_URL}${movie.backdrop_path}`}
@@ -178,7 +178,7 @@ const MovieDetails = () => {
 
             <div className="max-w-7xl mx-auto px-6 -mt-80 relative z-20">
                 <div className="flex flex-col md:flex-row gap-10">
-                    {/* Poster */}
+                    {/* poster */}
                     <div className="shrink-0 w-72">
                         {movie.poster_path ? (
                             <img
@@ -200,7 +200,7 @@ const MovieDetails = () => {
                         </button>
                     </div>
 
-                    {/* Content */}
+                    {/* content */}
                     <div type="info" className="flex-1 pt-10 md:pt-32">
                         <h1 className="text-6xl font-display font-bold mb-2">{movie.title}</h1>
 
@@ -212,7 +212,7 @@ const MovieDetails = () => {
                             <span>{director}</span>
                         </div>
 
-                        {/* Genres */}
+                        {/* genres */}
                         <div className="flex gap-2 mb-8">
                             {movie.genres?.map(genre => (
                                 <span key={genre.id} className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium uppercase tracking-wider backdrop-blur-sm">
@@ -229,9 +229,9 @@ const MovieDetails = () => {
                             </p>
                         </div>
 
-                        {/* Actions Card */}
+                        {/* actions card */}
                         <div className="flex flex-wrap items-center gap-6 mb-12 bg-[#1A2C24] p-6 rounded-2xl border border-white/5 max-w-3xl">
-                            {/* Rating */}
+                            {/* rating */}
                             <div className="flex flex-col pr-8 border-r border-white/10">
                                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Avg Rating</span>
                                 <div className="flex items-end gap-2">
@@ -249,7 +249,7 @@ const MovieDetails = () => {
                                 <span className="text-xs text-gray-500 mt-1">{movie.vote_count} Reviews</span>
                             </div>
 
-                            {/* User Actions */}
+                            {/* user actions */}
                             <div className="flex items-center gap-4 flex-1 justify-end">
                                 <div className="flex flex-col items-center gap-2">
                                     <button className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-colors">
@@ -273,7 +273,7 @@ const MovieDetails = () => {
                             </div>
                         </div>
 
-                        {/* Tabs */}
+                        {/* tabs */}
                         <div className="flex gap-8 border-b border-white/10 mb-8">
                             {["CAST", "CREW", "DETAILS", "GENRE", "RELEASE"].map((tab) => (
                                 <button
@@ -286,7 +286,7 @@ const MovieDetails = () => {
                             ))}
                         </div>
 
-                        {/* Tab Content */}
+                        {/* tab content */}
                         <div className="min-h-[300px] animate-in fade-in duration-500">
                             {renderTabContent()}
                         </div>
