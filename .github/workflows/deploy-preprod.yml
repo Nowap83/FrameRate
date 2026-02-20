@@ -1,0 +1,83 @@
+name: Preprod CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - preprod
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Backend Tests
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: go test -v ./...
+
+      # Frontend Tests
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run test:run
+
+  deploy:
+    name: Deploy to Proxmox LXC
+    runs-on: ubuntu-latest
+    needs: test # Only run if tests pass
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install cloudflared
+        run: |
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
+
+      - name: Setup SSH Context for Cloudflare
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          # Configure SSH to use ProxyCommand via cloudflared to access the tunnel hostname
+          cat <<EOF > ~/.ssh/config
+          Host $SSH_HOST
+            ProxyCommand cloudflared access ssh --hostname %h
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          EOF
+
+      - name: Deploy via SSH
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          DEPLOY_PATH: "/opt/preprod"
+        run: |
+          ssh $SSH_USER@$SSH_HOST "bash -s" << EOF
+            cd $DEPLOY_PATH || exit 1
+            git checkout preprod
+            git pull origin preprod
+            
+            # Restart backend/frontend via Docker Compose
+            docker compose down
+            docker compose up -d --build
+          EOF
