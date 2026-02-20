@@ -140,7 +140,7 @@ const Profile = () => {
         }
     }, [authLoading, authUser]);
 
-    if (authLoading || loading) return <div className="min-h-screen bg-[var(--color-body-bg)] flex items-center justify-center text-white font-mono text-sm animate-pulse">LOADING PROFILE DATA...</div>;
+    if (authLoading || loading) return <div className="min-h-screen bg-[var(--color-body-bg)] flex items-center justify-center text-white font-mono text-sm"><div className="loader"></div></div>;
 
     if (!authUser) return (
         <div className="min-h-screen bg-[var(--color-body-bg)] flex items-center justify-center text-white flex-col gap-6">

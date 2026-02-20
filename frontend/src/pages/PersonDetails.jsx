@@ -39,10 +39,7 @@ const PersonDetails = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-[var(--color-body-bg)] flex items-center justify-center text-white">
-                <div className="animate-pulse flex flex-col items-center">
-                    <div className="w-12 h-12 border-4 border-[var(--color-primary)] border-t-transparent flex items-center justify-center rounded-full animate-spin mb-4"></div>
-                    <p className="text-gray-400">Loading details...</p>
-                </div>
+                <div className="loader"></div>
             </div>
         );
     }

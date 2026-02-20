@@ -218,7 +218,7 @@ const Settings = () => {
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-[var(--color-body-bg)] flex items-center justify-center text-white font-mono text-sm animate-pulse">LOADING SETTINGS...</div>;
+    if (loading) return <div className="min-h-screen bg-[var(--color-body-bg)] flex items-center justify-center text-white font-mono text-sm"><div className="loader"></div></div>;
 
     return (
         <div className="min-h-screen bg-[var(--color-body-bg)] pb-20 pt-20">
