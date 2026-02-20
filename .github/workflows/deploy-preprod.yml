@@ -75,9 +75,18 @@ jobs:
           DEPLOY_PATH: "/opt/preprod"
         run: |
           ssh $SSH_USER@$SSH_HOST "bash -s" << EOF
+            # Create directory if it doesn't exist
+            mkdir -p $DEPLOY_PATH
             cd $DEPLOY_PATH || exit 1
-            git checkout preprod
-            git pull origin preprod
+            
+            # Initialize git if not already a repository
+            if [ ! -d .git ]; then
+              git clone -b preprod https://github.com/Nowap83/FrameRate.git .
+            else
+              git checkout preprod
+              git reset --hard origin/preprod
+              git pull origin preprod
+            fi
             
             # Restart backend/frontend via Docker Compose
             docker compose down
