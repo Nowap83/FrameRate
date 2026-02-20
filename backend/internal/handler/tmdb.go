@@ -144,6 +144,58 @@ func (h *TMDBHandler) GetMovieVideos(c *gin.Context) {
 	})
 }
 
+func (h *TMDBHandler) GetPersonDetails(c *gin.Context) {
+	personID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid person ID",
+		})
+		return
+	}
+
+	language := c.DefaultQuery("language", "en-US")
+
+	details, err := h.tmdbService.GetPersonDetails(personID, language)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch person details",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    details,
+	})
+}
+
+func (h *TMDBHandler) GetPersonMovieCredits(c *gin.Context) {
+	personID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid person ID",
+		})
+		return
+	}
+
+	language := c.DefaultQuery("language", "en-US")
+
+	credits, err := h.tmdbService.GetPersonMovieCredits(personID, language)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch person movie credits",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    credits,
+	})
+}
+
 // * @param: ?path=/abc.jpg&size=w500
 func (h *TMDBHandler) GetImageURL(c *gin.Context) {
 	path := c.Query("path")

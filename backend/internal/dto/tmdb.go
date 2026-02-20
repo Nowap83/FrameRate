@@ -77,6 +77,23 @@ type TMDBPersonDetails struct {
 	Gender       int     `json:"gender"`
 }
 
+type TMDBPersonCredits struct {
+	ID   int                   `json:"id"`
+	Cast []TMDBPersonCastMovie `json:"cast"`
+	Crew []TMDBPersonCrewMovie `json:"crew"`
+}
+
+type TMDBPersonCastMovie struct {
+	TMDBMovie
+	Character string `json:"character"`
+}
+
+type TMDBPersonCrewMovie struct {
+	TMDBMovie
+	Job        string `json:"job"`
+	Department string `json:"department"`
+}
+
 type TMDBVideo struct {
 	ID          string `json:"id"`
 	ISO639_1    string `json:"iso_639_1"`
