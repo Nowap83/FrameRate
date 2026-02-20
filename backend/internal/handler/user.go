@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/Nowap83/FrameRate/backend/internal/dto"
 	"github.com/Nowap83/FrameRate/backend/internal/service"
@@ -208,5 +209,35 @@ func (h *UserHandler) CheckUsername(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"username":  username,
 		"available": available,
+	})
+}
+
+// (Admin) fetches all users
+func (h *UserHandler) GetAllUsers(c *gin.Context) {
+	users, err := h.userService.GetAllUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}
+
+// (Admin) deletes any user by ID
+func (h *UserHandler) DeleteUserAdmin(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	if err := h.userService.DeleteAccount(uint(id)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User deleted successfully",
 	})
 }

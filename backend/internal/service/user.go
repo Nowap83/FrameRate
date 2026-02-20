@@ -44,6 +44,20 @@ func (s *UserService) GetUserByID(userID uint) (*model.User, error) {
 	return user, nil
 }
 
+// fetches all users (for admin)
+func (s *UserService) GetAllUsers() ([]dto.UserResponse, error) {
+	users, err := s.userRepo.GetAllUsers()
+	if err != nil {
+		return nil, errors.New("failed to fetch users")
+	}
+
+	var response []dto.UserResponse
+	for _, user := range users {
+		response = append(response, dto.ToUserResponse(user))
+	}
+	return response, nil
+}
+
 // fetches user profile with statistics
 func (s *UserService) GetProfile(userID uint) (*dto.ProfileResponse, error) {
 	user, err := s.userRepo.GetByID(userID)
