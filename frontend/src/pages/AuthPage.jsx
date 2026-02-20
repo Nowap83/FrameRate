@@ -49,7 +49,6 @@ const AuthPage = () => {
                     login: data.email,
                     password: data.password
                 });
-                console.log("Full Login Response:", response);
                 if (!response.token || !response.user) {
                     console.error("Missing token or user in response", response);
                     setApiError("Invalid response from server");
@@ -59,7 +58,6 @@ const AuthPage = () => {
                 navigate("/");
             } else {
                 const response = await authService.register(data);
-                console.log("Register Success:", response);
                 setIsRegistered(true);
             }
         } catch (error) {

@@ -18,7 +18,7 @@ const MovieDetails = () => {
         const fetchDetails = async () => {
             try {
                 const data = await getMovieDetails(id);
-                console.log("Movie Data Received:", data);
+                // console.log("Movie Data Received:", data);
                 if (data.data) {
                     setMovie(data.data);
                 } else {
