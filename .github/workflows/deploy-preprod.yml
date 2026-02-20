@@ -81,13 +81,15 @@ jobs:
             
             # Initialize git if not already a repository
             if [ ! -d .git ]; then
-              git clone -b preprod https://github.com/Nowap83/FrameRate.git .
+              git init
+              git remote add origin https://github.com/Nowap83/FrameRate.git
+              git fetch origin preprod
+              git checkout -f preprod
             else
-              git checkout preprod
+              git fetch origin preprod
               git reset --hard origin/preprod
-              git pull origin preprod
             fi
-            
+
             # Restart backend/frontend via Docker Compose
             docker compose down
             docker compose up -d --build
