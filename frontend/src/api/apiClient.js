@@ -22,4 +22,16 @@ apiClient.interceptors.request.use(
     }
 );
 
+// interception des erreurs de réponse
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            // Déclenche un événement global que l'AuthContext pourra écouter pour déconnecter
+            window.dispatchEvent(new Event("auth:unauthorized"));
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default apiClient;

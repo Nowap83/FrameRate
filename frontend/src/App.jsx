@@ -11,7 +11,9 @@ import Settings from "./pages/Settings"
 import SearchPage from "./pages/SearchPage"
 import PersonDetails from "./pages/PersonDetails"
 import AdminDashboard from "./pages/AdminDashboard"
-import { useAuth } from "./context/AuthContext"
+import { useAuth } from "../context/AuthContext"
+import ProtectedRoute from "../components/ProtectedRoute"
+import ErrorBoundary from "../components/ErrorBoundary"
 
 function App() {
   const { user, loading } = useAuth();
@@ -25,49 +27,41 @@ function App() {
     return <div className="min-h-screen bg-[var(--color-body-bg)] flex items-center justify-center text-white"><div className="loader"></div></div>;
   }
 
+  const withLayout = (Component) => (
+    <ErrorBoundary>
+      <AppLayout>
+        {Component}
+      </AppLayout>
+    </ErrorBoundary>
+  );
+
   return (
     <Routes>
-      <Route path="/" element={
-        <AppLayout>
-          {user ? <HomePage /> : <LandingPage />}
-        </AppLayout>
-      } />
+      <Route path="/" element={withLayout(user ? <HomePage /> : <LandingPage />)} />
       <Route path="/login" element={user ? <Navigate to="/" /> : <AuthPage />} />
       <Route path="/register" element={user ? <Navigate to="/" /> : <AuthPage />} />
-      <Route path="/movie/:id" element={
-        <AppLayout>
-          <MovieDetails />
-        </AppLayout>
-      } />
+      <Route path="/movie/:id" element={withLayout(<MovieDetails />)} />
+      <Route path="/search" element={withLayout(<SearchPage />)} />
+      <Route path="/person/:id" element={withLayout(<PersonDetails />)} />
+      <Route path="/verify-email" element={withLayout(<VerifyEmail />)} />
+
+      {/* Routes Protégées (Utilisateurs uniquement) */}
       <Route path="/profile" element={
-        <AppLayout>
-          <Profile />
-        </AppLayout>
-      } />
-      <Route path="/verify-email" element={
-        <AppLayout>
-          <VerifyEmail />
-        </AppLayout>
+        <ProtectedRoute>
+          {withLayout(<Profile />)}
+        </ProtectedRoute>
       } />
       <Route path="/settings" element={
-        <AppLayout>
-          <Settings />
-        </AppLayout>
+        <ProtectedRoute>
+          {withLayout(<Settings />)}
+        </ProtectedRoute>
       } />
-      <Route path="/search" element={
-        <AppLayout>
-          <SearchPage />
-        </AppLayout>
-      } />
-      <Route path="/person/:id" element={
-        <AppLayout>
-          <PersonDetails />
-        </AppLayout>
-      } />
+
+      {/* Routes Admin (Admin uniquement) */}
       <Route path="/admin" element={
-        <AppLayout>
-          <AdminDashboard />
-        </AppLayout>
+        <ProtectedRoute requireAdmin={true}>
+          {withLayout(<AdminDashboard />)}
+        </ProtectedRoute>
       } />
     </Routes>
   );
