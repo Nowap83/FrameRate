@@ -40,6 +40,19 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    // ecouter 401 de l'apiClient pour deconnecter auto
+    useEffect(() => {
+        const handleUnauthorized = () => {
+            console.warn("Unauthorized access detected (401), disconnecting user...");
+            logout();
+        };
+
+        window.addEventListener("auth:unauthorized", handleUnauthorized);
+        return () => {
+            window.removeEventListener("auth:unauthorized", handleUnauthorized);
+        };
+    }, []);
+
     return (
         <AuthContext.Provider value={{ user, login, logout, loading, setUser }}>
             {children}
