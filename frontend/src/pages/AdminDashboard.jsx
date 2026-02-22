@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { Navigate } from "react-router-dom";
 import { adminService } from "../api/admin";
 import { Users, Trash2, LayoutDashboard, Search, ShieldAlert } from "lucide-react";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 
 export default function AdminDashboard() {
     const { user } = useAuth();
@@ -11,6 +12,8 @@ export default function AdminDashboard() {
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState("users");
     const [searchQuery, setSearchQuery] = useState("");
+
+    useDocumentTitle("Admin Dashboard");
 
     // Only admins can access
     if (!user || user.is_admin !== true) {

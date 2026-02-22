@@ -5,9 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import apiClient from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
-import { changePasswordSchema } from '../validators/auth';
-import Input from '../components/Input';
 import { getAvatarUrl } from '../utils/image';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 import MovieSearch from '../components/MovieSearch';
 
@@ -16,7 +15,7 @@ const Settings = () => {
     const { user: authUser, loading: authLoading, setUser } = useAuth();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'auth'
+    const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'auth' | 'avatar'
     const [passwordError, setPasswordError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState('');
     const [avatarError, setAvatarError] = useState('');
@@ -24,6 +23,8 @@ const Settings = () => {
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [checkingUsername, setCheckingUsername] = useState(false);
     const [usernameAvailable, setUsernameAvailable] = useState(null); // null, true, 'taken', 'current'
+
+    useDocumentTitle("Settings");
 
     // password form
     const {

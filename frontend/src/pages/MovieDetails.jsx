@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { getMovieDetails, getMovieVideos } from "../api/tmdb";
 import Button from "../components/Button";
 import { Star, Eye, Plus, List, Play, Heart } from "lucide-react";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original";
 const POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500";
@@ -13,6 +14,8 @@ const MovieDetails = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("CAST");
     const [trailerKey, setTrailerKey] = useState(null);
+
+    useDocumentTitle(movie ? movie.title : "Movie");
 
     useEffect(() => {
         const fetchDetails = async () => {

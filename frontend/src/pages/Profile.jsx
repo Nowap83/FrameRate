@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import apiClient from '../api/apiClient';
 import { Link } from 'react-router-dom';
 import { Settings, Share2, Heart, Activity, Calendar, MapPin, Film, User, Star, Globe } from 'lucide-react';
+import { getAvatarUrl } from '../utils/image';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { getAvatarUrl } from '../utils/image';
 
 const ProfileHeader = ({ user }) => (
@@ -139,6 +140,8 @@ const Profile = () => {
             }
         }
     }, [authLoading, authUser]);
+
+    useDocumentTitle(authUser?.username || "Profile");
 
     if (authLoading || loading) return <div className="min-h-screen bg-[var(--color-body-bg)] flex items-center justify-center text-white font-mono text-sm"><div className="loader"></div></div>;
 
