@@ -13,12 +13,16 @@ import (
 	"gorm.io/gorm"
 )
 
-type AuthService struct {
-	userRepo     repository.UserRepository
-	emailService *utils.EmailService
+type EmailSender interface {
+	SendVerificationEmail(to, username, token string) error
 }
 
-func NewAuthService(userRepo repository.UserRepository, emailService *utils.EmailService) *AuthService {
+type AuthService struct {
+	userRepo     repository.UserRepository
+	emailService EmailSender
+}
+
+func NewAuthService(userRepo repository.UserRepository, emailService EmailSender) *AuthService {
 	return &AuthService{
 		userRepo:     userRepo,
 		emailService: emailService,
