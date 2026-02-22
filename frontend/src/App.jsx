@@ -11,9 +11,9 @@ import Settings from "./pages/Settings"
 import SearchPage from "./pages/SearchPage"
 import PersonDetails from "./pages/PersonDetails"
 import AdminDashboard from "./pages/AdminDashboard"
-import { useAuth } from "../context/AuthContext"
-import ProtectedRoute from "../components/ProtectedRoute"
-import ErrorBoundary from "../components/ErrorBoundary"
+import { useAuth } from "./context/AuthContext"
+import ProtectedRoute from "./components/ProtectedRoute"
+import ErrorBoundary from "./components/ErrorBoundary"
 
 function App() {
   const { user, loading } = useAuth();

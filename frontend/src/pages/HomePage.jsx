@@ -128,16 +128,16 @@ const HomePage = () => {
                                                 initial={{ y: 20, opacity: 0 }}
                                                 animate={{ y: 0, opacity: 1 }}
                                                 transition={{ delay: 0.5 }}
-                                                className="flex items-center gap-4"
+                                                className="flex flex-wrap items-center gap-3 md:gap-4"
                                             >
                                                 <button
-                                                    className={`bg-white text-black px-6 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-gray-200 transition-colors z-20 ${!trailerKey ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    className={`bg-white text-black px-4 md:px-6 py-2 md:py-3 text-sm md:text-base rounded-full font-bold flex items-center gap-2 hover:bg-gray-200 transition-colors z-20 ${!trailerKey ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     onClick={handleWatchTrailer}
                                                     disabled={!trailerKey}
                                                 >
                                                     <Play size={20} fill="black" /> Watch Trailer
                                                 </button>
-                                                <button className="bg-white/10 backdrop-blur-md px-6 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-white/20 transition-colors z-20">
+                                                <button className="bg-white/10 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 text-sm md:text-base rounded-full font-bold flex items-center gap-2 hover:bg-white/20 transition-colors z-20">
                                                     <Plus size={20} /> Add to Watchlist
                                                 </button>
                                             </motion.div>

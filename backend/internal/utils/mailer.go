@@ -26,9 +26,14 @@ func NewEmailService() *EmailService {
 		Log.Fatal("FRONTEND_URL not set")
 	}
 
+	fromAddress := os.Getenv("RESEND_FROM_EMAIL")
+	if fromAddress == "" {
+		fromAddress = "FrameRate <onboarding@resend.dev>"
+	}
+
 	return &EmailService{
 		client:      resend.NewClient(apiKey),
-		fromAddress: "FrameRate <onboarding@resend.dev>", // pas oublier de changer avec nom de domaine en prod
+		fromAddress: fromAddress,
 		frontendURL: frontendURL,
 	}
 }

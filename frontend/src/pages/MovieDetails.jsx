@@ -180,9 +180,9 @@ const MovieDetails = () => {
             </div>
 
             <div className="max-w-7xl mx-auto px-6 -mt-80 relative z-20">
-                <div className="flex flex-col md:flex-row gap-10">
+                <div className="flex flex-col md:flex-row gap-8 md:gap-10">
                     {/* poster */}
-                    <div className="shrink-0 w-72">
+                    <div className="shrink-0 w-48 md:w-72 mx-auto md:mx-0">
                         {movie.poster_path ? (
                             <img
                                 src={`${POSTER_BASE_URL}${movie.poster_path}`}
@@ -190,7 +190,7 @@ const MovieDetails = () => {
                                 className="w-full rounded-xl shadow-2xl border border-gray-700/50"
                             />
                         ) : (
-                            <div className="w-full h-[430px] bg-gray-800 rounded-xl flex items-center justify-center">No Image</div>
+                            <div className="w-full aspect-[2/3] bg-gray-800 rounded-xl flex items-center justify-center">No Image</div>
                         )}
 
                         <button
@@ -204,19 +204,19 @@ const MovieDetails = () => {
                     </div>
 
                     {/* content */}
-                    <div type="info" className="flex-1 pt-10 md:pt-32">
-                        <h1 className="text-6xl font-display font-bold mb-2">{movie.title}</h1>
+                    <div type="info" className="flex-1 pt-6 md:pt-32 text-center md:text-left">
+                        <h1 className="text-4xl md:text-6xl font-display font-bold mb-3 leading-tight">{movie.title}</h1>
 
-                        <div className="flex items-center gap-4 text-gray-300 mb-6 text-sm">
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 md:gap-4 text-gray-300 mb-6 text-xs md:text-sm">
                             <span>{movie.release_date?.split("-")[0]}</span>
-                            <span>•</span>
+                            <span className="hidden sm:inline">•</span>
                             <span>{formattedRuntime}</span>
-                            <span>•</span>
+                            <span className="hidden sm:inline">•</span>
                             <span>{director}</span>
                         </div>
 
                         {/* genres */}
-                        <div className="flex gap-2 mb-8">
+                        <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-8">
                             {movie.genres?.map(genre => (
                                 <span key={genre.id} className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium uppercase tracking-wider backdrop-blur-sm">
                                     {genre.name}
@@ -277,7 +277,7 @@ const MovieDetails = () => {
                         </div>
 
                         {/* tabs */}
-                        <div className="flex gap-8 border-b border-white/10 mb-8">
+                        <div className="flex gap-6 border-b border-white/10 mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide pb-2">
                             {["CAST", "CREW", "DETAILS", "GENRE", "RELEASE"].map((tab) => (
                                 <button
                                     key={tab}
