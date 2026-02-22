@@ -43,6 +43,14 @@ const AuthPage = () => {
         setIsRegistered(false);
     }, [isLogin, reset]);
 
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     const onSubmit = async (data) => {
         setIsLoading(true);
         setApiError(null);
@@ -102,7 +110,7 @@ const AuthPage = () => {
 
     return (
         <div className="min-h-screen bg-[#0A0F0D] flex items-center justify-center p-4 overflow-hidden">
-            <div className="w-full max-w-6xl h-[750px] bg-header-bg rounded-3xl shadow-2xl overflow-hidden flex relative">
+            <div className="w-full max-w-6xl h-auto min-h-[600px] md:h-[750px] bg-header-bg rounded-3xl shadow-2xl overflow-hidden flex relative">
 
                 {/* image */}
                 <motion.div
@@ -153,11 +161,11 @@ const AuthPage = () => {
 
                 {/* form */}
                 <motion.div
-                    className="w-full md:w-[40%] p-8 md:p-14 flex flex-col justify-center bg-[#162520] z-0"
-                    animate={{ x: isLogin ? "150%" : 0 }}
+                    className="w-full md:w-[40%] p-6 md:p-14 flex flex-col justify-center bg-[#162520] z-0"
+                    animate={{ x: isLogin && !isMobile ? "150%" : 0 }}
                     transition={{ type: "spring", stiffness: 50, damping: 15 }}
                 >
-                    <div className="flex items-center gap-2 text-white font-bold text-lg mb-12 justify-center md:justify-start">
+                    <div className="flex items-center gap-2 text-white font-bold text-lg mb-8 md:mb-12 justify-center md:justify-start">
                         <div className="text-mint">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z" />

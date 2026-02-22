@@ -111,11 +111,11 @@ const Header = () => {
                         </>
                     ) : (
                         <div className="flex items-center gap-3">
-                            <Link to="/login" className="text-gray-300 hover:text-white font-medium text-sm px-3 py-2">
+                            <Link to="/login" className="text-gray-300 hover:text-white font-medium text-xs sm:text-sm px-2 sm:px-3 py-2">
                                 Sign In
                             </Link>
                             <Link to="/register">
-                                <Button className="px-5 py-2 text-sm rounded-full">Get Started</Button>
+                                <Button className="px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full whitespace-nowrap">Get Started</Button>
                             </Link>
                         </div>
                     )}

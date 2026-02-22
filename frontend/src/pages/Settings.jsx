@@ -227,9 +227,9 @@ const Settings = () => {
             <div className="max-w-4xl mx-auto px-4 md:px-8">
 
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => navigate('/profile')} className="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition-colors">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0 mb-8">
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <button onClick={() => navigate('/profile')} className="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition-colors shrink-0">
                             <ChevronLeft size={24} />
                         </button>
                         <div>
@@ -242,7 +242,7 @@ const Settings = () => {
                             type="submit"
                             form="settings-form"
                             disabled={saving}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-[var(--color-primary)] text-black font-bold rounded-full hover:bg-[#a6e6ce] transition-all hover:scale-105 shadow-[0_0_20px_rgba(189,244,223,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center justify-center md:justify-start gap-2 px-6 py-2.5 bg-[var(--color-primary)] text-black font-bold rounded-full hover:bg-[#a6e6ce] transition-all hover:scale-105 shadow-[0_0_20px_rgba(189,244,223,0.3)] disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
                         >
                             <Save size={18} />
                             {saving ? 'Saving...' : 'Save Changes'}
