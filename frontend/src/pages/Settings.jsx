@@ -9,7 +9,8 @@ import { getAvatarUrl } from '../utils/image';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
 import MovieSearch from '../components/MovieSearch';
-
+import Input from '../components/Input';
+import { changePasswordSchema } from '../validators/auth';
 const Settings = () => {
     const navigate = useNavigate();
     const { user: authUser, loading: authLoading, setUser } = useAuth();
