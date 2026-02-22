@@ -60,6 +60,14 @@ type RegisterResponse struct {
 	Message string `json:"message"`
 }
 
+type PaginatedUsersResponse struct {
+	Users      []UserResponse `json:"users"`
+	Total      int64          `json:"total"`
+	Page       int            `json:"page"`
+	Limit      int            `json:"limit"`
+	TotalPages int            `json:"total_pages"`
+}
+
 type LoginResponse struct {
 	Token string       `json:"token"`
 	User  UserResponse `json:"user"`
