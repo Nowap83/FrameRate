@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import apiClient from "../api/apiClient";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 
 const SearchPage = () => {
     const [searchParams] = useSearchParams();
     const query = searchParams.get("q");
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    useDocumentTitle(query ? `Search: ${query}` : "Search");
 
     useEffect(() => {
         const fetchResults = async () => {

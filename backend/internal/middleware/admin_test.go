@@ -19,7 +19,7 @@ type mockUserRepo struct {
 
 func (m *mockUserRepo) Create(user *model.User) error                              { return nil }
 func (m *mockUserRepo) GetByID(id uint) (*model.User, error)                       { return m.user, m.err }
-func (m *mockUserRepo) GetAllUsers() ([]*model.User, error)                        { return nil, nil }
+func (m *mockUserRepo) GetAllUsers(page, limit int) ([]*model.User, int64, error)  { return nil, 0, nil }
 func (m *mockUserRepo) GetByEmailOrUsername(login string) (*model.User, error)     { return nil, nil }
 func (m *mockUserRepo) GetByEmail(email string) (*model.User, error)               { return nil, nil }
 func (m *mockUserRepo) GetByUsername(username string) (*model.User, error)         { return nil, nil }

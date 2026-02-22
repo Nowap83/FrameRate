@@ -45,6 +45,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 	{
 		// Auth (publiques)
 		auth := api.Group("/auth")
+		auth.Use(middleware.AuthRateLimiter())
 		{
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
@@ -53,6 +54,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 
 		// TMDB
 		tmdb := api.Group("/tmdb")
+		tmdb.Use(middleware.APIRateLimiter())
 		{
 			tmdb.GET("/search", tmdbHandler.SearchMovies)
 			tmdb.GET("/popular", tmdbHandler.GetPopularMovies)
@@ -66,7 +68,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 
 		// Routes protégées
 		protected := api.Group("")
-		protected.Use(middleware.AuthRequired())
+		protected.Use(middleware.AuthRequired(), middleware.APIRateLimiter())
 		{
 			// Admin routes
 			admin := protected.Group("/admin")

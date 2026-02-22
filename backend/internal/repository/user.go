@@ -8,7 +8,7 @@ import (
 type UserRepository interface {
 	Create(user *model.User) error
 	GetByID(id uint) (*model.User, error)
-	GetAllUsers() ([]*model.User, error)
+	GetAllUsers(page, limit int) ([]*model.User, int64, error)
 	GetByEmailOrUsername(login string) (*model.User, error)
 	GetByEmail(email string) (*model.User, error)
 	GetByUsername(username string) (*model.User, error)
@@ -38,12 +38,27 @@ func (r *GormUserRepository) GetByID(id uint) (*model.User, error) {
 	return &user, nil
 }
 
-func (r *GormUserRepository) GetAllUsers() ([]*model.User, error) {
+func (r *GormUserRepository) GetAllUsers(page, limit int) ([]*model.User, int64, error) {
 	var users []*model.User
-	if err := r.db.Find(&users).Error; err != nil {
-		return nil, err
+	var total int64
+
+	// Count total users
+	if err := r.db.Model(&model.User{}).Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
-	return users, nil
+
+	// Calculate offset
+	offset := (page - 1) * limit
+	if offset < 0 {
+		offset = 0
+	}
+
+	// Fetch paginated users
+	if err := r.db.Offset(offset).Limit(limit).Find(&users).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return users, total, nil
 }
 
 func (r *GormUserRepository) GetByEmailOrUsername(login string) (*model.User, error) {

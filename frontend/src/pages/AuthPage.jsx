@@ -9,6 +9,7 @@ import { AUTH_MOVIES } from "../data/authMovies";
 import { loginSchema, registerSchema } from "../validators/auth";
 import { authService } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 
 const AuthPage = () => {
     const location = useLocation();
@@ -20,6 +21,8 @@ const AuthPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState(null);
     const [isRegistered, setIsRegistered] = useState(false);
+
+    useDocumentTitle(isLogin ? "Log In" : "Sign Up");
 
     // init form avec react-hook-form
     const {

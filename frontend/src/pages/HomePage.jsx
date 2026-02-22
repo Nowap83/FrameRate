@@ -4,12 +4,15 @@ import { Link } from "react-router-dom";
 import apiClient from "../api/apiClient";
 import { getMovieVideos } from "../api/tmdb";
 import { Play, Star, Plus } from "lucide-react";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 
 const HomePage = () => {
     const [popularMovies, setPopularMovies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
     const [trailerKey, setTrailerKey] = useState(null);
+
+    useDocumentTitle("Home");
 
     useEffect(() => {
         const fetchPopular = async () => {

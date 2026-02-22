@@ -45,16 +45,27 @@ func (s *UserService) GetUserByID(userID uint) (*model.User, error) {
 }
 
 // fetches all users (for admin)
-func (s *UserService) GetAllUsers() ([]dto.UserResponse, error) {
-	users, err := s.userRepo.GetAllUsers()
+func (s *UserService) GetAllUsers(page, limit int) (*dto.PaginatedUsersResponse, error) {
+	users, total, err := s.userRepo.GetAllUsers(page, limit)
 	if err != nil {
 		return nil, errors.New("failed to fetch users")
 	}
 
-	var response []dto.UserResponse
+	var userResponses []dto.UserResponse
 	for _, user := range users {
-		response = append(response, dto.ToUserResponse(user))
+		userResponses = append(userResponses, dto.ToUserResponse(user))
 	}
+
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+
+	response := &dto.PaginatedUsersResponse{
+		Users:      userResponses,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: totalPages,
+	}
+
 	return response, nil
 }
 
