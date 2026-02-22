@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 import { Settings, Share2, Heart, Activity, Calendar, MapPin, Film, User, Star, Globe } from 'lucide-react';
 import { getAvatarUrl } from '../utils/image';
 import useDocumentTitle from '../hooks/useDocumentTitle';
-import { getAvatarUrl } from '../utils/image';
 
 const ProfileHeader = ({ user }) => (
     <div className="relative mb-12 mt-24 px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row items-end gap-6">
