@@ -105,6 +105,39 @@ func (s *UserService) GetProfile(userID uint) (*dto.ProfileResponse, error) {
 	return response, nil
 }
 
+// fetches paginated watched films with their ratings for a given user
+func (s *UserService) GetMyFilms(userID uint, page, limit int) (*dto.PaginatedMoviesResponse, error) {
+	moviesWithRatings, total, err := s.movieRepo.GetWatchedFilmsWithRatings(userID, page, limit)
+	if err != nil {
+		return nil, errors.New("failed to fetch user films")
+	}
+
+	var movieResponses []dto.MovieListResponse
+	for _, m := range moviesWithRatings {
+		movieResponses = append(movieResponses, dto.MovieListResponse{
+			ID:                m.ID,
+			TmdbID:            m.TmdbID,
+			Title:             m.Title,
+			ReleaseYear:       m.ReleaseYear,
+			PosterURL:         m.PosterURL,
+			AverageUserRating: 0.0,
+			UserRating:        m.UserRating,
+		})
+	}
+
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+
+	response := &dto.PaginatedMoviesResponse{
+		Movies:     movieResponses,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: totalPages,
+	}
+
+	return response, nil
+}
+
 // updates user profile information
 func (s *UserService) UpdateProfile(userID uint, input dto.UpdateProfileRequest) (*dto.ProfileResponse, error) {
 	user, err := s.userRepo.GetByID(userID)

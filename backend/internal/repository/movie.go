@@ -34,10 +34,16 @@ func (r *MovieRepository) UpsertMovie(movie *model.Movie) error {
 }
 
 func (r *MovieRepository) UpsertTrack(track *model.Track) error {
-	return r.db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "user_id"}, {Name: "movie_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"is_watched", "is_favorite", "is_watchlist", "watched_date", "updated_at"}),
-	}).Create(track).Error
+	var existing model.Track
+	err := r.db.Where("user_id = ? AND movie_id = ?", track.UserID, track.MovieID).First(&existing).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// create new
+			return r.db.Create(track).Error
+		}
+		return err
+	}
+	return r.db.Model(&existing).Updates(track).Error
 }
 
 func (r *MovieRepository) UpsertRate(rate *model.Rate) error {
@@ -147,4 +153,39 @@ func (r *MovieRepository) UpdateFavoriteFilms(userID uint, movies []model.Movie)
 	user.ID = userID
 
 	return r.db.Model(&user).Association("FavoriteFilms").Replace(&savedMovies)
+}
+
+// mapping struct for the join query
+type WatchedMovieWithRating struct {
+	model.Movie
+	UserRating *float32 `gorm:"column:user_rating"`
+}
+
+func (r *MovieRepository) GetWatchedFilmsWithRatings(userID uint, page, limit int) ([]WatchedMovieWithRating, int64, error) {
+	var results []WatchedMovieWithRating
+	var total int64
+
+	offset := (page - 1) * limit
+
+	query := r.db.Table("movies").
+		Select("movies.*, rates.rating as user_rating").
+		Joins("JOIN tracks ON tracks.movie_id = movies.id").
+		Joins("LEFT JOIN rates ON rates.movie_id = movies.id AND rates.user_id = tracks.user_id").
+		Where("tracks.user_id = ? AND tracks.is_watched = ?", userID, true)
+
+	// get total count
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// get paginated results
+	if err := query.
+		Order("tracks.watched_date DESC, tracks.updated_at DESC").
+		Offset(offset).
+		Limit(limit).
+		Find(&results).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return results, total, nil
 }

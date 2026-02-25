@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Nowap83/FrameRate/backend/internal/dto"
 	"github.com/Nowap83/FrameRate/backend/internal/model"
@@ -112,7 +113,20 @@ func (s *MovieService) RateMovie(userID uint, tmdbID int, req dto.RateMovieReque
 		Rating:  req.Rating,
 	}
 
-	return s.movieRepo.UpsertRate(rate)
+	err = s.movieRepo.UpsertRate(rate)
+	if err != nil {
+		return err
+	}
+
+	// auto-mark as watched when rated
+	now := time.Now()
+	track := &model.Track{
+		UserID:      userID,
+		MovieID:     movie.ID,
+		IsWatched:   true,
+		WatchedDate: &now,
+	}
+	return s.movieRepo.UpsertTrack(track)
 }
 
 func (s *MovieService) ReviewMovie(userID uint, tmdbID int, req dto.ReviewRequest) error {
@@ -129,4 +143,46 @@ func (s *MovieService) ReviewMovie(userID uint, tmdbID int, req dto.ReviewReques
 	}
 
 	return s.movieRepo.UpsertReview(review)
+}
+
+func (s *MovieService) GetMovieInteraction(userID uint, tmdbID int) (*dto.UserInteractionResponse, error) {
+	movie, err := s.movieRepo.GetMovieByTmdbID(tmdbID)
+	if err != nil {
+		// no interaction if movie doesn't exist
+		return &dto.UserInteractionResponse{
+			IsWatched:   false,
+			IsFavorite:  false,
+			IsWatchlist: false,
+		}, nil
+	}
+
+	track, rate, review, _ := s.movieRepo.GetUserInteraction(userID, movie.ID)
+
+	response := &dto.UserInteractionResponse{
+		IsWatched:   false,
+		IsFavorite:  false,
+		IsWatchlist: false,
+	}
+
+	if track != nil {
+		response.IsWatched = track.IsWatched
+		response.IsFavorite = track.IsFavorite
+		response.IsWatchlist = track.IsWatchlist
+		response.WatchedDate = track.WatchedDate
+	}
+
+	if rate != nil && rate.Rating > 0 {
+		r := rate.Rating
+		response.UserRating = &r
+	}
+
+	if review != nil && review.Content != "" {
+		response.UserReview = &dto.ReviewResponse{
+			Content:   review.Content,
+			IsSpoiler: review.IsSpoiler,
+			CreatedAt: review.CreatedAt,
+		}
+	}
+
+	return response, nil
 }
