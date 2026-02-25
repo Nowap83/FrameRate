@@ -99,17 +99,26 @@ const MovieGrid = ({ movies }) => {
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {movies.map(movie => (
-                <Link to={`/movie/${movie.tmdb_id}`} key={movie.id} className="relative aspect-[2/3] rounded-xl overflow-hidden group shadow-lg">
-                    <img
-                        src={`https://image.tmdb.org/t/p/w500${movie.poster_url || movie.poster_path}`}
-                        alt={movie.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                        <span className="text-white font-bold text-sm line-clamp-2 leading-tight transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{movie.title}</span>
-                        <span className="text-[var(--color-primary)] text-xs mt-1 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75">{new Date(movie.release_date).getFullYear()}</span>
-                    </div>
-                </Link>
+                <div key={movie.id} className="relative aspect-[2/3] rounded-xl overflow-hidden group shadow-lg">
+                    <Link to={`/movie/${movie.tmdb_id}`} className="block w-full h-full">
+                        <img
+                            src={`https://image.tmdb.org/t/p/w500${movie.poster_url || movie.poster_path}`}
+                            alt={movie.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                            <span className="text-white font-bold text-sm line-clamp-2 leading-tight transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{movie.title}</span>
+                            <span className="text-[var(--color-primary)] text-xs mt-1 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75">{new Date(movie.release_date || `${movie.release_year}-01-01`).getFullYear()}</span>
+                        </div>
+                    </Link>
+                    {/* Optional User Rating overlay or underlay depending on requirements, let's put it on top right */}
+                    {movie.user_rating != null && movie.user_rating > 0 && (
+                        <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md flex items-center gap-1">
+                            <Star size={12} className="text-[var(--color-primary)] fill-current" />
+                            <span className="text-white text-xs font-bold">{movie.user_rating.toFixed(1)}</span>
+                        </div>
+                    )}
+                </div>
             ))}
         </div>
     );
@@ -119,6 +128,9 @@ const Profile = () => {
     const { user: authUser, loading: authLoading } = useAuth();
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('Profile');
+    const [userFilms, setUserFilms] = useState([]);
+    const [filmsLoading, setFilmsLoading] = useState(false);
 
     const fetchProfile = async () => {
         try {
@@ -131,6 +143,19 @@ const Profile = () => {
         }
     };
 
+    const fetchUserFilms = async () => {
+        try {
+            setFilmsLoading(true);
+            const { userService } = await import('../api/user');
+            const data = await userService.getUserFilms(1, 50);
+            setUserFilms(data?.movies || []);
+        } catch (error) {
+            console.error("Failed to fetch user films:", error);
+        } finally {
+            setFilmsLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (!authLoading) {
             if (authUser) {
@@ -140,6 +165,12 @@ const Profile = () => {
             }
         }
     }, [authLoading, authUser]);
+
+    useEffect(() => {
+        if (activeTab === 'Films' && userFilms.length === 0) {
+            fetchUserFilms();
+        }
+    }, [activeTab]);
 
     useDocumentTitle(authUser?.username || "Profile");
 
@@ -156,12 +187,6 @@ const Profile = () => {
     if (!profileData) return <div className="min-h-screen bg-[var(--color-body-bg)] flex items-center justify-center text-white">Profile not found.</div>;
 
     const { user, stats, favorites, recent_activity } = profileData;
-
-    // Calculate rating stats
-    // Note: backend now sends rating_distribution in stats
-    const avgRating = stats?.rating_distribution ?
-        Object.entries(stats.rating_distribution).reduce((acc, [rating, count]) => acc + (parseFloat(rating) * count), 0) /
-        (stats.reviews || 1) : 0; // rough approximation or use backend logic if provided
 
     return (
         <div className="min-h-screen bg-[var(--color-body-bg)] pb-20">
@@ -182,11 +207,12 @@ const Profile = () => {
                     {['Profile', 'Activity', 'Films', 'Reviews', 'Diary', 'Watchlist', 'Lists'].map((tab, i) => (
                         <button
                             key={tab}
+                            onClick={() => setActiveTab(tab)}
                             className={`pb-4 text-xs font-bold tracking-[0.15em] uppercase transition-all relative
-                                ${i === 0 ? 'text-[var(--color-primary)]' : 'text-gray-500 hover:text-white'}`}
+                                ${activeTab === tab ? 'text-[var(--color-primary)]' : 'text-gray-500 hover:text-white'}`}
                         >
                             {tab}
-                            {i === 0 && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-primary)] shadow-[0_0_10px_var(--color-primary)]" />}
+                            {activeTab === tab && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-primary)] shadow-[0_0_10px_var(--color-primary)]" />}
                         </button>
                     ))}
                 </div>
@@ -194,15 +220,37 @@ const Profile = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                     {/* Left Column (Main Content) */}
                     <div className="lg:col-span-2 flex flex-col gap-12">
-                        <section>
-                            <SectionHeader title="Favorite Films" action="Manage Favorites" />
-                            <MovieGrid movies={favorites} />
-                        </section>
+                        {activeTab === 'Profile' && (
+                            <>
+                                <section>
+                                    <SectionHeader title="Favorite Films" action="Manage Favorites" />
+                                    <MovieGrid movies={favorites} />
+                                </section>
 
-                        <section>
-                            <SectionHeader title="Recent Activity" />
-                            <MovieGrid movies={recent_activity} />
-                        </section>
+                                <section>
+                                    <SectionHeader title="Recent Activity" />
+                                    <MovieGrid movies={recent_activity} />
+                                </section>
+                            </>
+                        )}
+
+                        {activeTab === 'Films' && (
+                            <section>
+                                <SectionHeader title="Your Watched Films" />
+                                {filmsLoading ? (
+                                    <div className="h-40 flex items-center justify-center text-gray-500"><div className="loader"></div></div>
+                                ) : (
+                                    <MovieGrid movies={userFilms} />
+                                )}
+                            </section>
+                        )}
+
+                        {/* Other tabs placeholders */}
+                        {!['Profile', 'Films'].includes(activeTab) && (
+                            <div className="h-40 flex items-center justify-center border border-dashed border-white/10 rounded-xl">
+                                <p className="text-gray-500 text-sm">{activeTab} content coming soon.</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Column (Sidebar) */}

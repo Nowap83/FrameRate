@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getMovieDetails, getMovieVideos } from "../api/tmdb";
+import { getMovieDetails, getMovieVideos, getMovieInteraction, trackMovie, rateMovie } from "../api/tmdb";
 import Button from "../components/Button";
+import RatingStars from "../components/RatingStars";
 import { Star, Eye, Plus, List, Play, Heart } from "lucide-react";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 
@@ -14,6 +15,7 @@ const MovieDetails = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("CAST");
     const [trailerKey, setTrailerKey] = useState(null);
+    const [interaction, setInteraction] = useState({ is_watched: false, user_rating: 0 });
 
     useDocumentTitle(movie ? movie.title : "Movie");
 
@@ -49,9 +51,28 @@ const MovieDetails = () => {
             }
         };
 
+        const fetchUserInteraction = async () => {
+            try {
+                const data = await getMovieInteraction(id);
+                if (data) {
+                    setInteraction({
+                        is_watched: data.is_watched || false,
+                        user_rating: data.user_rating || 0
+                    });
+                }
+            } catch (error) {
+                // Not logged in or error
+            }
+        };
+
         if (id) {
-            fetchDetails();
-            fetchTrailer();
+            Promise.all([
+                fetchDetails(),
+                fetchTrailer(),
+                fetchUserInteraction()
+            ]).finally(() => {
+                setLoading(false);
+            });
         }
     }, [id]);
 
@@ -79,6 +100,32 @@ const MovieDetails = () => {
     const handleWatchTrailer = () => {
         if (trailerKey) {
             window.open(`https://www.youtube.com/watch?v=${trailerKey}`, "_blank");
+        }
+    };
+
+    const handleWatchToggle = async () => {
+        try {
+            const newStatus = !interaction.is_watched;
+            await trackMovie(id, { is_watched: newStatus });
+            setInteraction(prev => ({ ...prev, is_watched: newStatus }));
+        } catch (error) {
+            console.error("Failed to toggle watch status", error);
+            // Optionally add toast here
+        }
+    };
+
+    const handleRatingChange = async (rating) => {
+        try {
+            if (rating === 0) {
+                // The API doesn't support deleting a rating explicitly unless passed as 0 and handled, 
+                // assuming our backend permits un-rating (or we ignore it for now). 
+                // Wait, our backend validation says min=0, so rating=0 is allowed.
+            }
+            await rateMovie(id, { rating: Number(rating) });
+            // Rating a movie automatically marks it as watched on the backend, so we sync UI
+            setInteraction(prev => ({ ...prev, user_rating: rating, is_watched: true }));
+        } catch (error) {
+            console.error("Failed to rate movie", error);
         }
     };
 
@@ -234,7 +281,7 @@ const MovieDetails = () => {
 
                         {/* actions card */}
                         <div className="flex flex-wrap items-center gap-6 mb-12 bg-[#1A2C24] p-6 rounded-2xl border border-white/5 max-w-3xl">
-                            {/* rating */}
+                            {/* avg rating */}
                             <div className="flex flex-col pr-8 border-r border-white/10">
                                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Avg Rating</span>
                                 <div className="flex items-end gap-2">
@@ -252,17 +299,33 @@ const MovieDetails = () => {
                                 <span className="text-xs text-gray-500 mt-1">{movie.vote_count} Reviews</span>
                             </div>
 
+                            {/* user rating */}
+                            <div className="flex flex-col pr-8 border-r border-white/10 min-w-[140px]">
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Your Rating</span>
+                                <div className="mt-2.5">
+                                    <RatingStars
+                                        rating={interaction.user_rating}
+                                        onChange={handleRatingChange}
+                                        size={20}
+                                    />
+                                </div>
+                            </div>
+
                             {/* user actions */}
                             <div className="flex items-center gap-4 flex-1 justify-end">
                                 <div className="flex flex-col items-center gap-2">
-                                    <button className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-colors">
+                                    <button
+                                        className={`p-3 rounded-full transition-colors ${interaction.is_watched ? 'bg-mint text-emerald-950' : 'bg-white/5 text-white hover:bg-white/10'}`}
+                                        onClick={handleWatchToggle}
+                                        title={interaction.is_watched ? "Mark as unwatched" : "Mark as watched"}
+                                    >
                                         <Eye size={24} />
                                     </button>
                                 </div>
 
-                                <button className="flex items-center gap-2 px-6 py-3 bg-mint text-emerald-950 font-bold rounded-xl hover:brightness-110 transition-all">
+                                <button className="flex items-center gap-2 px-6 py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all">
                                     <Plus size={20} className="stroke-[3]" />
-                                    ADD TO WATCHLIST
+                                    WATCHLIST
                                 </button>
 
                                 <button className="flex items-center gap-2 px-6 py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all">

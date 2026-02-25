@@ -20,4 +20,20 @@ export const getMovieVideos = async (id) => {
     return response.data;
 };
 
+// USER INTERACTIONS
+export const getMovieInteraction = async (id) => {
+    const response = await apiClient.get(`/movies/${id}/interaction`);
+    return response.data;
+};
+
+export const trackMovie = async (id, data) => {
+    const response = await apiClient.post(`/movies/${id}/track`, data);
+    return response.data;
+};
+
+export const rateMovie = async (id, data) => {
+    const response = await apiClient.post(`/movies/${id}/rate`, data);
+    return response.data;
+};
+
 
