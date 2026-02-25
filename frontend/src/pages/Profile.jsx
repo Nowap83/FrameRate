@@ -188,6 +188,10 @@ const Profile = () => {
 
     const { user, stats, favorites, recent_activity } = profileData;
 
+    const avgRating = stats?.rating_distribution ?
+        Object.entries(stats.rating_distribution).reduce((acc, [rating, count]) => acc + (parseFloat(rating) * count), 0) /
+        (stats.reviews || 1) : 0;
+
     return (
         <div className="min-h-screen bg-[var(--color-body-bg)] pb-20">
             <ProfileHeader user={user} />
