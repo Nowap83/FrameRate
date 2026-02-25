@@ -82,6 +82,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 			users := protected.Group("/users")
 			{
 				users.GET("/me", userHandler.GetProfile)
+				users.GET("/me/films", userHandler.GetMyFilms)
 				users.PUT("/me", userHandler.UpdateProfile)
 				users.POST("/me/avatar", userHandler.UploadAvatar)
 				users.PUT("/me/password", userHandler.ChangePassword)
@@ -92,6 +93,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 			// Movies (tracking, rating, review)
 			movies := protected.Group("/movies")
 			{
+				movies.GET("/:tmdb_id/interaction", movieHandler.GetMovieInteraction)
 				movies.POST("/:tmdb_id/track", movieHandler.TrackMovie)
 				movies.POST("/:tmdb_id/rate", movieHandler.RateMovie)
 				movies.POST("/:tmdb_id/review", movieHandler.ReviewMovie)

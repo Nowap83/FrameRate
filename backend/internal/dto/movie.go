@@ -3,13 +3,22 @@ package dto
 import "time"
 
 type MovieListResponse struct {
-	ID                uint    `json:"id"`
-	TmdbID            int     `json:"tmdb_id"`
-	Title             string  `json:"title"`
-	ReleaseYear       int     `json:"release_year"`
-	PosterURL         string  `json:"poster_url"`
-	AverageUserRating float32 `json:"average_user_rating"`
-	TotalRatings      int     `json:"total_ratings"`
+	ID                uint     `json:"id"`
+	TmdbID            int      `json:"tmdb_id"`
+	Title             string   `json:"title"`
+	ReleaseYear       int      `json:"release_year"`
+	PosterURL         string   `json:"poster_url"`
+	AverageUserRating float32  `json:"average_user_rating"`
+	TotalRatings      int      `json:"total_ratings"`
+	UserRating        *float32 `json:"user_rating,omitempty"`
+}
+
+type PaginatedMoviesResponse struct {
+	Movies     []MovieListResponse `json:"movies"`
+	Total      int64               `json:"total"`
+	Page       int                 `json:"page"`
+	Limit      int                 `json:"limit"`
+	TotalPages int                 `json:"total_pages"`
 }
 
 type MovieResponse struct {

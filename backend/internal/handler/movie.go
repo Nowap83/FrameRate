@@ -87,3 +87,21 @@ func (h *MovieHandler) ReviewMovie(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Movie review updated successfully"})
 }
+
+func (h *MovieHandler) GetMovieInteraction(c *gin.Context) {
+	tmdbID, err := strconv.Atoi(c.Param("tmdb_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid movie ID"})
+		return
+	}
+
+	userID, _ := c.Get("userID")
+
+	interaction, err := h.movieService.GetMovieInteraction(userID.(uint), tmdbID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch interaction", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, interaction)
+}
