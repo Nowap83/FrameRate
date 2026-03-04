@@ -25,12 +25,9 @@ FROM nginx:alpine
 # Copy the build output to replace the default nginx contents.
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Replace default config with our proxy config template
-# We use a template so envsubst can inject variables at runtime
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+# Replace default config with our proxy config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
-# Nginx alpine image has built-in support for templates in /etc/nginx/templates/
-# It will automatically run envsubst and output to /etc/nginx/conf.d/
 CMD ["nginx", "-g", "daemon off;"]
