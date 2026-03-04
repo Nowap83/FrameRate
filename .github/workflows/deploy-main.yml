@@ -108,12 +108,6 @@ jobs:
             sed -i '/^HOST_POSTGRES_PORT=/d' .env; echo 'HOST_POSTGRES_PORT=5433' >> .env
             sed -i '/^HOST_REDIS_PORT=/d' .env; echo 'HOST_REDIS_PORT=6380' >> .env
 
-            # Remove old conflicting port variables that crash the backend application internally
-            sed -i '/^FRONTEND_PORT=/d' .env
-            sed -i '/^BACKEND_PORT=/d' .env
-            sed -i '/^POSTGRES_PORT=/d' .env
-            sed -i '/^REDIS_PORT=/d' .env
-
             # Restart backend/frontend via Docker Compose
             docker compose down
             docker compose up -d --build
