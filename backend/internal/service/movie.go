@@ -50,7 +50,7 @@ func (s *MovieService) ensureMovieExists(tmdbID int) (*model.Movie, error) {
 			}
 
 			if tmdbMovie.ReleaseDate != "" {
-				// Simple year parsing
+				// year parsing
 				if len(tmdbMovie.ReleaseDate) >= 4 {
 					var year int
 					_, _ = fmt.Sscanf(tmdbMovie.ReleaseDate[:4], "%d", &year)

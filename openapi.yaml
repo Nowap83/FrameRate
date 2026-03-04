@@ -1,0 +1,465 @@
+openapi: 3.0.3
+info:
+  title: FrameRate API
+  description: API documentation for the FrameRate backend.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+    description: Local server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    LoginRequest:
+      type: object
+      required:
+        - login
+        - password
+      properties:
+        login:
+          type: string
+          description: "Username or Email"
+        password:
+          type: string
+          format: password
+    UpdateProfileRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        bio:
+          type: string
+        profile_picture_url:
+          type: string
+        given_name:
+          type: string
+        family_name:
+          type: string
+        location:
+          type: string
+        website:
+          type: string
+    ChangePasswordRequest:
+      type: object
+      required:
+        - current_password
+        - new_password
+      properties:
+        current_password:
+          type: string
+          format: password
+        new_password:
+          type: string
+          format: password
+    TrackMovieRequest:
+      type: object
+      properties:
+        is_watched:
+          type: boolean
+        is_favorite:
+          type: boolean
+        is_watchlist:
+          type: boolean
+        watched_date:
+          type: string
+          format: date-time
+    RateMovieRequest:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+    ReviewRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+        is_spoiler:
+          type: boolean
+          default: false
+security:
+  - bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Bad request
+        '409':
+          description: Conflict (Email or Username already exists)
+  /auth/login:
+    post:
+      summary: Authenticate a user
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+        '401':
+          description: Invalid credentials
+        '403':
+          description: Email not verified
+  /auth/verify-email:
+    get:
+      summary: Verify user email
+      tags: [Auth]
+      security: []
+      parameters:
+        - in: query
+          name: token
+          schema:
+            type: string
+          required: true
+          description: Verification token
+      responses:
+        '200':
+          description: Email verified successfully
+        '400':
+          description: Invalid or expired token
+
+  /tmdb/search:
+    get:
+      summary: Search movies
+      tags: [TMDB]
+      security: []
+      parameters:
+        - in: query
+          name: query
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: page
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of movies
+  /tmdb/popular:
+    get:
+      summary: Get popular movies
+      tags: [TMDB]
+      security: []
+      responses:
+        '200':
+          description: List of popular movies
+  /tmdb/movie/{id}:
+    get:
+      summary: Get movie details
+      tags: [TMDB]
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Movie details
+  /tmdb/movie/{id}/credits:
+    get:
+      summary: Get movie credits (cast & crew)
+      tags: [TMDB]
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Movie credits
+  /tmdb/movie/{id}/videos:
+    get:
+      summary: Get movie videos
+      tags: [TMDB]
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Movie videos
+  /tmdb/person/{id}:
+    get:
+      summary: Get person details
+      tags: [TMDB]
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Person details
+  /tmdb/person/{id}/credits:
+    get:
+      summary: Get person movie credits
+      tags: [TMDB]
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Person movie credits
+  /tmdb/image:
+    get:
+      summary: Get image URL
+      tags: [TMDB]
+      security: []
+      parameters:
+        - in: query
+          name: path
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: size
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Redirect or returns URL
+        
+  /users/me:
+    get:
+      summary: Get current authenticated user profile
+      tags: [Users]
+      responses:
+        '200':
+          description: User profile and stats
+        '401':
+          description: Unauthorized
+    put:
+      summary: Update user profile
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+    delete:
+      summary: Delete your account
+      tags: [Users]
+      responses:
+        '200':
+          description: Account deleted successfully
+  /users/me/films:
+    get:
+      summary: Get user watched films
+      tags: [Users]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated watched movies
+  /users/me/password:
+    put:
+      summary: Change user password
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed
+  /users/me/avatar:
+    post:
+      summary: Upload user avatar
+      tags: [Users]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar updated
+  /users/check-username:
+    get:
+      summary: Check if a username is available
+      tags: [Users]
+      parameters:
+        - in: query
+          name: username
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Username availability
+          
+  /admin/users:
+    get:
+      summary: Get all users (Admin only)
+      tags: [Admin]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated users
+  /admin/users/{id}:
+    delete:
+      summary: Delete user by ID (Admin only)
+      tags: [Admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User deleted
+          
+  /movies/{tmdb_id}/interaction:
+    get:
+      summary: Get current user interaction for a movie
+      tags: [Movies]
+      parameters:
+        - in: path
+          name: tmdb_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User interaction details (watched, favorite, rating, etc.)
+  /movies/{tmdb_id}/track:
+    post:
+      summary: Track a movie (mark as watched, favorite, watchlist)
+      tags: [Movies]
+      parameters:
+        - in: path
+          name: tmdb_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackMovieRequest'
+      responses:
+        '200':
+          description: Movie tracking updated successfully
+  /movies/{tmdb_id}/rate:
+    post:
+      summary: Rate a movie
+      tags: [Movies]
+      parameters:
+        - in: path
+          name: tmdb_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RateMovieRequest'
+      responses:
+        '200':
+          description: Movie rating updated
+  /movies/{tmdb_id}/review:
+    post:
+      summary: Review a movie
+      tags: [Movies]
+      parameters:
+        - in: path
+          name: tmdb_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+      responses:
+        '200':
+          description: Movie review updated
