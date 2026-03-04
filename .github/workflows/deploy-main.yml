@@ -97,11 +97,16 @@ jobs:
             fi
 
             # Add prod overrides to .env if not present
-            grep -q "ENV_PREFIX=" .env || echo "ENV_PREFIX=main" >> .env
-            grep -q "FRONTEND_PORT=" .env || echo "FRONTEND_PORT=81" >> .env
-            grep -q "BACKEND_PORT=" .env || echo "BACKEND_PORT=8081" >> .env
-            grep -q "POSTGRES_PORT=" .env || echo "POSTGRES_PORT=5433" >> .env
-            grep -q "REDIS_PORT=" .env || echo "REDIS_PORT=6380" >> .env
+            # Add prod overrides to .env if not present. Ensure newline first, then append.
+            echo "" >> .env
+            git config --global core.autocrlf false
+            
+            # Simple replace or append for environment variables
+            sed -i '/^ENV_PREFIX=/d' .env; echo 'ENV_PREFIX=main' >> .env
+            sed -i '/^FRONTEND_PORT=/d' .env; echo 'FRONTEND_PORT=81' >> .env
+            sed -i '/^BACKEND_PORT=/d' .env; echo 'BACKEND_PORT=8081' >> .env
+            sed -i '/^POSTGRES_PORT=/d' .env; echo 'POSTGRES_PORT=5433' >> .env
+            sed -i '/^REDIS_PORT=/d' .env; echo 'REDIS_PORT=6380' >> .env
 
             # Restart backend/frontend via Docker Compose
             docker compose down
