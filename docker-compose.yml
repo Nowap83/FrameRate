@@ -2,13 +2,13 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: framerate_postgres
+    container_name: ${ENV_PREFIX:-framerate}_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-framerate}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -22,9 +22,9 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: framerate_redis
+    container_name: ${ENV_PREFIX:-framerate}_redis
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -40,10 +40,10 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: framerate_backend
+    container_name: ${ENV_PREFIX:-framerate}_backend
     restart: always
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
     env_file:
       - .env
     environment:
@@ -66,10 +66,10 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=/api
-    container_name: framerate_frontend
+    container_name: ${ENV_PREFIX:-framerate}_frontend
     restart: always
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT:-80}:80"
     depends_on:
       - backend
     networks:
