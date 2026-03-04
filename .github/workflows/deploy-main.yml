@@ -103,10 +103,18 @@ jobs:
             
             # Simple replace or append for environment variables
             sed -i '/^ENV_PREFIX=/d' .env; echo 'ENV_PREFIX=main' >> .env
+            
+            # Map external exposed ports for production
             sed -i '/^HOST_FRONTEND_PORT=/d' .env; echo 'HOST_FRONTEND_PORT=81' >> .env
             sed -i '/^HOST_BACKEND_PORT=/d' .env; echo 'HOST_BACKEND_PORT=8081' >> .env
             sed -i '/^HOST_POSTGRES_PORT=/d' .env; echo 'HOST_POSTGRES_PORT=5433' >> .env
             sed -i '/^HOST_REDIS_PORT=/d' .env; echo 'HOST_REDIS_PORT=6380' >> .env
+
+            # Restore required internal ports in case they were deleted by previous buggy deployment runs
+            sed -i '/^FRONTEND_PORT=/d' .env; echo 'FRONTEND_PORT=80' >> .env
+            sed -i '/^BACKEND_PORT=/d' .env; echo 'BACKEND_PORT=8080' >> .env
+            sed -i '/^POSTGRES_PORT=/d' .env; echo 'POSTGRES_PORT=5432' >> .env
+            sed -i '/^REDIS_PORT=/d' .env; echo 'REDIS_PORT=6379' >> .env
 
             # Restart backend/frontend via Docker Compose
             docker compose down
