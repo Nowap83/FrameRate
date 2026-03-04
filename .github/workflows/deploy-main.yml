@@ -90,6 +90,12 @@ jobs:
               git reset --hard origin/main
             fi
 
+            # Handle .env file by copying it from preprod if it doesn't exist
+            if [ ! -f .env ]; then
+              echo "Copie du fichier .env depuis l'environnement preprod..."
+              cp /opt/preprod/.env .env || touch .env
+            fi
+
             # Restart backend/frontend via Docker Compose using the prod override file
             docker compose down
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
