@@ -10,9 +10,9 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - ${ENV_PREFIX:-framerate}_postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
-      - ${ENV_PREFIX:-framerate}_network
+      - framerate_network
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-framerate}" ]
       interval: 10s
@@ -26,9 +26,9 @@ services:
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
-      - ${ENV_PREFIX:-framerate}_redis_data:/data
+      - redis_data:/data
     networks:
-      - ${ENV_PREFIX:-framerate}_network
+      - framerate_network
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
@@ -57,7 +57,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - ${ENV_PREFIX:-framerate}_network
+      - framerate_network
 
   # Frontend (React + Vite + Nginx)
   frontend:
@@ -73,14 +73,17 @@ services:
     depends_on:
       - backend
     networks:
-      - ${ENV_PREFIX:-framerate}_network
+      - framerate_network
 
 volumes:
-  ${ENV_PREFIX:-framerate}_postgres_data:
+  postgres_data:
+    name: ${ENV_PREFIX:-framerate}_postgres_data
     driver: local
-  ${ENV_PREFIX:-framerate}_redis_data:
+  redis_data:
+    name: ${ENV_PREFIX:-framerate}_redis_data
     driver: local
 
 networks:
-  ${ENV_PREFIX:-framerate}_network:
+  framerate_network:
+    name: ${ENV_PREFIX:-framerate}_network
     driver: bridge
