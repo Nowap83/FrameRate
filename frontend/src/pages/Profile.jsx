@@ -6,6 +6,8 @@ import { Settings, Share2, Heart, Activity, Calendar, MapPin, Film, User, Star, 
 import { getAvatarUrl } from '../utils/image';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import apiClient from '../api/apiClient';
+import MovieCard from '../components/MovieCard';
+import RatingStars from '../components/RatingStars';
 
 const ProfileHeader = ({ user }) => (
     <div className="relative mb-8 md:mb-12 mt-20 md:mt-24 px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-end gap-6">
@@ -99,26 +101,7 @@ const MovieGrid = ({ movies }) => {
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {movies.map(movie => (
-                <div key={movie.id} className="relative aspect-[2/3] rounded-xl overflow-hidden group shadow-lg">
-                    <Link to={`/movie/${movie.tmdb_id}`} className="block w-full h-full">
-                        <img
-                            src={`https://image.tmdb.org/t/p/w500${movie.poster_url || movie.poster_path}`}
-                            alt={movie.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                            <span className="text-white font-bold text-sm line-clamp-2 leading-tight transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{movie.title}</span>
-                            <span className="text-[var(--color-primary)] text-xs mt-1 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75">{new Date(movie.release_date || `${movie.release_year}-01-01`).getFullYear()}</span>
-                        </div>
-                    </Link>
-                    {/* Optional User Rating overlay or underlay depending on requirements, let's put it on top right */}
-                    {movie.user_rating != null && movie.user_rating > 0 && (
-                        <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md flex items-center gap-1">
-                            <Star size={12} className="text-[var(--color-primary)] fill-current" />
-                            <span className="text-white text-xs font-bold">{movie.user_rating.toFixed(1)}</span>
-                        </div>
-                    )}
-                </div>
+                <MovieCard key={movie.id || movie.tmdb_id} movie={movie} />
             ))}
         </div>
     );
@@ -188,9 +171,35 @@ const Profile = () => {
 
     const { user, stats, favorites, recent_activity } = profileData;
 
-    const avgRating = stats?.rating_distribution ?
-        Object.entries(stats.rating_distribution).reduce((acc, [rating, count]) => acc + (parseFloat(rating) * count), 0) /
-        (stats.reviews || 1) : 0;
+    // Calculate True Average and Distribution Data
+    let totalRatingsCount = 0;
+    let totalRatingSum = 0;
+    const distributionData = Array.from({ length: 10 }, (_, i) => {
+        const val = (i + 1) / 2;
+        return {
+            rating: val,
+            label: val % 1 === 0 ? val.toString() : '',
+            tooltip: val.toFixed(1),
+            count: 0
+        };
+    });
+
+    if (stats?.rating_distribution) {
+        Object.entries(stats.rating_distribution).forEach(([ratingStr, count]) => {
+            const rating = parseFloat(ratingStr);
+            const index = Math.round(rating * 2) - 1; // 0.5 -> 0, 5.0 -> 9
+
+            if (index >= 0 && index < 10) {
+                distributionData[index].count += count;
+            }
+
+            totalRatingsCount += count;
+            totalRatingSum += (rating * count);
+        });
+    }
+
+    const avgRating = totalRatingsCount > 0 ? (totalRatingSum / totalRatingsCount) : 0;
+    const maxCount = Math.max(...distributionData.map(d => d.count), 1); // Avoid division by zero
 
     return (
         <div className="min-h-screen bg-[var(--color-body-bg)] pb-20">
@@ -261,13 +270,52 @@ const Profile = () => {
                     <div className="flex flex-col gap-8">
                         <div className="glass-panel p-8 rounded-2xl">
                             <h3 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">Rating Distribution</h3>
-                            <div className="aspect-square bg-white/5 rounded-full flex items-center justify-center border border-white/5 relative group">
-                                <div className="absolute inset-0 rounded-full border-[12px] border-[var(--color-primary)]/20 border-t-[var(--color-primary)] transform -rotate-45" />
-                                <div className="text-center">
-                                    <span className="text-5xl font-bold text-white tracking-tighter">
-                                        {avgRating > 0 ? avgRating.toFixed(1) : '0.0'}
-                                    </span>
-                                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mt-2 font-bold">Avg Rating</p>
+                            <div className="flex flex-col">
+                                {/* Average Header */}
+                                <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-5xl font-display font-bold text-white tracking-tighter">
+                                            {avgRating > 0 ? avgRating.toFixed(1) : '0.0'}
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <div className="flex">
+                                                <RatingStars rating={Math.round(avgRating * 2) / 2} readOnly={true} size={14} />
+                                            </div>
+                                            <span className="text-xs text-gray-400 font-bold tracking-widest uppercase">{totalRatingsCount} Ratings</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Histogram Bar Chart */}
+                                <div className="flex flex-col mt-2">
+                                    <div className="h-28 flex items-end justify-between gap-1.5 relative px-2">
+                                        {distributionData.map((data, index) => {
+                                            const heightPercentage = data.count > 0 ? `${(data.count / maxCount) * 100}%` : '4%'; // Base 4% height for empty bars to outline the shape
+                                            return (
+                                                <div key={data.rating} className="flex-1 flex flex-col justify-end items-center h-full group relative">
+                                                    {/* Tooltip */}
+                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-full mb-2 bg-[#1A2C24] border border-white/10 text-white text-[10px] font-bold px-2 py-1 rounded shadow-xl z-20 whitespace-nowrap pointer-events-none">
+                                                        <span className="text-[var(--color-primary)]">★ {data.tooltip}</span> ({data.count})
+                                                    </div>
+
+                                                    {/* Bar */}
+                                                    <div className="w-full flex-grow flex justify-center items-end pb-1">
+                                                        <div
+                                                            className={`w-full max-w-[16px] rounded-t-sm transition-all duration-300 ${data.count > 0 ? 'bg-[var(--color-primary)] hover:brightness-110 shadow-[0_0_10px_rgba(189,244,223,0.2)] group-hover:shadow-[0_0_15px_rgba(189,244,223,0.5)]' : 'bg-white/10'}`}
+                                                            style={{ height: heightPercentage }}
+                                                        />
+                                                    </div>
+
+                                                    {/* X-axis label per bar */}
+                                                    <div className="h-5 flex items-center justify-center mt-1">
+                                                        <span className="text-[9px] text-gray-500 font-bold font-mono">
+                                                            {data.label}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         </div>

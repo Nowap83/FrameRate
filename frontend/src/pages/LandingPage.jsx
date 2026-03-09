@@ -1,9 +1,19 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, PlayCircle } from "lucide-react";
 import Button from "../components/Button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
+    const [searchQuery, setSearchQuery] = useState("");
+    const navigate = useNavigate();
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        }
+    };
     return (
         <div className="min-h-screen text-white selection:bg-mint selection:text-black">
             {/* hero section */}
@@ -33,7 +43,8 @@ const LandingPage = () => {
                         The world's most beautiful social network for movie lovers. Rate, review, and discover your next favorite film.
                     </motion.p>
 
-                    <motion.div
+                    <motion.form
+                        onSubmit={handleSearch}
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.5, delay: 0.4 }}
@@ -45,14 +56,16 @@ const LandingPage = () => {
                             </div>
                             <input
                                 type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search for a movie, actor, or director..."
                                 className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur-md border border-white/10 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mint focus:border-transparent transition-all"
                             />
                         </div>
-                        <Button className="w-full md:w-auto px-8 py-3 rounded-full font-semibold">
+                        <Button type="submit" className="w-full md:w-auto px-8 py-3 rounded-full font-semibold">
                             Search
                         </Button>
-                    </motion.div>
+                    </motion.form>
 
                     <motion.div
                         initial={{ opacity: 0 }}
