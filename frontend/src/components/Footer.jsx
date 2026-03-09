@@ -22,7 +22,7 @@ const Footer = () => {
                 </div>
 
                 <nav className="flex items-center gap-8">
-                    {["About", "Terms", "Privacy", "Support"].map((item) => (
+                    {["About", "Terms", "Privacy"].map((item) => (
                         <Link
                             key={item}
                             to={`/${item.toLowerCase()}`}
@@ -31,6 +31,12 @@ const Footer = () => {
                             {item}
                         </Link>
                     ))}
+                    <a
+                        href="mailto:support@framerate.com"
+                        className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-mint transition-all duration-300 font-medium"
+                    >
+                        Support
+                    </a>
                 </nav>
             </div>
         </footer>

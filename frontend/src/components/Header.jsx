@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Button from "./Button";
-import { LogOut, User, Menu, Search, ShieldAlert } from "lucide-react";
+import { LogOut, User, Menu, Search, ShieldAlert, X } from "lucide-react";
 import { getAvatarUrl } from "../utils/image";
 import { useState } from "react";
 
@@ -9,6 +9,7 @@ const Header = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -120,12 +121,70 @@ const Header = () => {
                         </div>
                     )}
 
-                    {/* mobile menu button */}
-                    <button className="md:hidden p-2 text-gray-300">
-                        <Menu size={24} />
-                    </button>
+                    {/* mobile menu button fixed layout */}
+                    <div className="md:hidden flex items-center ml-4">
+                        <button
+                            className="p-2 text-gray-300 hover:text-white transition-colors"
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        >
+                            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {/* menu burger mobile */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden absolute top-full left-0 w-full bg-[#12201B]/95 backdrop-blur-xl border-b border-white/10 py-6 px-6 flex flex-col gap-6 shadow-2xl animate-in slide-in-from-top-2">
+                    <nav className="flex flex-col gap-4">
+                        <Link to="/movies" className="text-gray-300 hover:text-white text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>Films</Link>
+                        <Link to="/lists" className="text-gray-300 hover:text-white text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>Lists</Link>
+                        <Link to="/community" className="text-gray-300 hover:text-white text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>Community</Link>
+                    </nav>
+
+                    {user ? (
+                        <div className="flex flex-col gap-4 border-t border-white/10 pt-6">
+                            <Link to="/profile" className="flex items-center gap-3 text-white" onClick={() => setIsMobileMenuOpen(false)}>
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-mint to-emerald-600 flex items-center justify-center text-[#12201B] font-bold text-sm overflow-hidden">
+                                    {user.profile_picture_url ? (
+                                        <img src={getAvatarUrl(user.profile_picture_url)} alt={user.username} className="w-full h-full object-cover" />
+                                    ) : (
+                                        user.username?.charAt(0).toUpperCase()
+                                    )}
+                                </div>
+                                <span className="font-bold">{user.username}</span>
+                            </Link>
+
+                            {user.is_admin && (
+                                <Link to="/admin" className="flex items-center gap-3 text-gray-300 hover:text-mint transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <ShieldAlert size={20} />
+                                    <span>Admin Dashboard</span>
+                                </Link>
+                            )}
+
+                            <button
+                                onClick={() => {
+                                    handleLogout();
+                                    setIsMobileMenuOpen(false);
+                                }}
+                                className="flex items-center gap-3 text-red-400 hover:text-red-300 transition-colors w-full text-left"
+                            >
+                                <LogOut size={20} />
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-4 border-t border-white/10 pt-6">
+                            <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                                <Button className="w-full bg-white/10 hover:bg-white/20 text-white">Sign In</Button>
+                            </Link>
+                            <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                                <Button className="w-full">Get Started</Button>
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            )}
         </header>
     );
 };
