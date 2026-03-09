@@ -14,16 +14,13 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
     }
 
     if (!user) {
-        // Rediriger vers login, mais garder en mémoire d'où l'utilisateur vient
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
     if (requireAdmin && !user.is_admin) {
-        // Rediriger vers l'accueil si ce n'est pas un admin
         return <Navigate to="/" replace />;
     }
 
-    // Autoriser l'accès
     return children;
 };
 
