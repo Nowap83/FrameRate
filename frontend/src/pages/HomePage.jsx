@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import apiClient from "../api/apiClient";
 import { getMovieVideos } from "../api/tmdb";
-import { Play, Star, Plus } from "lucide-react";
+import { Play, Star, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import useDocumentTitle from "../hooks/useDocumentTitle";
+import MovieCard from "../components/MovieCard";
 
 const HomePage = () => {
-    const [popularMovies, setPopularMovies] = useState([]);
+    const [trendingMovies, setTrendingMovies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
     const [trailerKey, setTrailerKey] = useState(null);
@@ -15,23 +16,23 @@ const HomePage = () => {
     useDocumentTitle("Home");
 
     useEffect(() => {
-        const fetchPopular = async () => {
+        const fetchTrending = async () => {
             try {
-                const response = await apiClient.get("/tmdb/popular");
+                const response = await apiClient.get("/tmdb/trending?timeWindow=week");
                 if (response.data.success) {
-                    setPopularMovies(response.data.data.results);
+                    setTrendingMovies(response.data.data.results);
                 }
             } catch (error) {
-                console.error("Failed to fetch popular movies", error);
+                console.error("Failed to fetch trending movies", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchPopular();
+        fetchTrending();
     }, []);
 
-    const currentMovie = popularMovies[currentHeroIndex];
+    const currentMovie = trendingMovies[currentHeroIndex];
 
     // recupere le trailer pour le film hero actuel
     useEffect(() => {
@@ -57,14 +58,14 @@ const HomePage = () => {
 
     // Auto-rotate carousel
     useEffect(() => {
-        if (popularMovies.length === 0) return;
+        if (trendingMovies.length === 0) return;
 
         const interval = setInterval(() => {
-            setCurrentHeroIndex((prev) => (prev + 1) % Math.min(5, popularMovies.length)); // Rotate through top 5
+            setCurrentHeroIndex((prev) => (prev + 1) % Math.min(5, trendingMovies.length)); // Rotate through top 5
         }, 8000);
 
         return () => clearInterval(interval);
-    }, [popularMovies, currentHeroIndex]);
+    }, [trendingMovies, currentHeroIndex]);
 
     const handleWatchTrailer = (e) => {
         e.preventDefault();
@@ -74,11 +75,23 @@ const HomePage = () => {
         }
     };
 
+    const handlePrev = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setCurrentHeroIndex((prev) => (prev - 1 + Math.min(5, trendingMovies.length)) % Math.min(5, trendingMovies.length));
+    };
+
+    const handleNext = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setCurrentHeroIndex((prev) => (prev + 1) % Math.min(5, trendingMovies.length));
+    };
+
     return (
-        <div className="min-h-screen bg-[#12201B] text-white p-8">
+        <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] p-8">
             <header className="mb-10">
-                <h1 className="text-3xl font-bold font-display mb-2">Popular on FrameRate</h1>
-                <p className="text-gray-400">Discover what the community is watching.</p>
+                <h1 className="text-3xl font-bold font-display mb-2">Trending on FrameRate</h1>
+                <p className="text-gray-400">Discover what the community is watching this week.</p>
             </header>
 
             {loading ? (
@@ -86,7 +99,7 @@ const HomePage = () => {
             ) : (
                 <div className="relative">
                     {/* hero carousel */}
-                    {popularMovies.length > 0 && currentMovie && (
+                    {trendingMovies.length > 0 && currentMovie && (
                         <div className="relative h-[500px] w-full rounded-2xl overflow-hidden mb-12 shadow-2xl group cursor-pointer">
                             <AnimatePresence mode="wait">
                                 <motion.div
@@ -146,9 +159,23 @@ const HomePage = () => {
                                 </motion.div>
                             </AnimatePresence>
 
+                            {/* Carousel Controls */}
+                            <button
+                                onClick={handlePrev}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--color-primary)] hover:text-black z-20"
+                            >
+                                <ChevronLeft size={32} />
+                            </button>
+                            <button
+                                onClick={handleNext}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--color-primary)] hover:text-black z-20"
+                            >
+                                <ChevronRight size={32} />
+                            </button>
+
                             {/* Carousel Indicators */}
                             <div className="absolute bottom-8 right-8 flex gap-2 z-20">
-                                {[...Array(Math.min(5, popularMovies.length))].map((_, idx) => (
+                                {[...Array(Math.min(5, trendingMovies.length))].map((_, idx) => (
                                     <button
                                         key={idx}
                                         onClick={(e) => {
@@ -170,42 +197,8 @@ const HomePage = () => {
                     </h3>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                        {popularMovies.slice(1).map((movie) => (
-                            <Link to={`/movie/${movie.id}`} key={movie.id} className="block group relative">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                >
-                                    <div className="aspect-[2/3] rounded-xl overflow-hidden mb-3 shadow-lg relative">
-                                        <img
-                                            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                                            alt={movie.title}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                        />
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-sm">
-                                            <button
-                                                className="p-3 bg-mint rounded-full text-black hover:scale-110 transition-transform"
-                                                onClick={(e) => e.preventDefault()}
-                                            >
-                                                <Star size={20} />
-                                            </button>
-                                            <button
-                                                className="p-3 bg-white/20 rounded-full text-white hover:scale-110 transition-transform"
-                                                onClick={(e) => e.preventDefault()}
-                                            >
-                                                <Plus size={20} />
-                                            </button>
-                                        </div>
-                                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md flex items-center gap-1 text-xs font-bold ring-1 ring-white/10">
-                                            <Star size={12} className="text-yellow-400 fill-yellow-400" />
-                                            {movie.vote_average.toFixed(1)}
-                                        </div>
-                                    </div>
-                                    <h4 className="font-bold truncate group-hover:text-mint transition-colors">{movie.title}</h4>
-                                    <p className="text-xs text-gray-500">{new Date(movie.release_date).getFullYear()}</p>
-                                </motion.div>
-                            </Link>
+                        {trendingMovies.slice(1).map((movie) => (
+                            <MovieCard key={movie.id} movie={movie} />
                         ))}
                     </div>
                 </div>

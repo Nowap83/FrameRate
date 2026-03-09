@@ -61,7 +61,7 @@ const RatingStars = ({ rating, onChange, onHoverChange, readOnly = false, size =
             {[...Array(5)].map((_, index) => {
                 const filledValue = displayValue - index;
 
-                // Determine star state
+                // star state
                 let fill = 'none';
                 let strokeClass = 'text-gray-400';
 
@@ -69,7 +69,7 @@ const RatingStars = ({ rating, onChange, onHoverChange, readOnly = false, size =
                     fill = 'currentColor';
                     strokeClass = 'text-[var(--color-primary)]';
                 } else if (filledValue === 0.5) {
-                    // Half star handling
+                    // half star handling
                     return (
                         <div
                             key={index}

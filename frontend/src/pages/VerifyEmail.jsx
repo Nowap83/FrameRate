@@ -4,10 +4,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { authService } from "../api/auth";
 import Button from "../components/Button";
+import { useAuth } from "../context/AuthContext";
 
 const VerifyEmail = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { login } = useAuth();
     const token = searchParams.get("token");
     const hasRun = useRef(false);
 
@@ -32,9 +34,13 @@ const VerifyEmail = () => {
                 setStatus("success");
                 setMessage(response.message || "Your email has been successfully verified!");
 
-                // Si le backend renvoie un token, on connecte l'utilisateur directement
+                // Si le backend renvoie un token, on connecte l'utilisateur directement via AuthContext
                 if (response.token) {
-                    localStorage.setItem("token", response.token);
+                    if (response.user) {
+                        login(response.user, response.token);
+                    } else {
+                        localStorage.setItem("token", response.token);
+                    }
                 }
             } catch (error) {
                 setStatus("error");

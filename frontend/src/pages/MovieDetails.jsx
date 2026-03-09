@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { getMovieDetails, getMovieVideos, getMovieInteraction, trackMovie, rateMovie } from "../api/tmdb";
 import Button from "../components/Button";
 import RatingStars from "../components/RatingStars";
-import { Star, Eye, Plus, List, Play, Heart } from "lucide-react";
+import { Star, Eye, Plus, List, Play, Heart, User } from "lucide-react";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original";
@@ -144,7 +144,9 @@ const MovieDetails = () => {
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs text-center border border-white/5 p-2">No Image</div>
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-800/50 group-hover:bg-gray-800 transition-colors duration-300">
+                                            <User size={40} className="text-gray-600 opacity-50" />
+                                        </div>
                                     )}
                                 </div>
                                 <h4 className="font-bold text-sm truncate group-hover:text-mint transition-colors">{actor.name}</h4>
@@ -166,12 +168,19 @@ const MovieDetails = () => {
                     </div>
                 );
             }
-            case "DETAILS":
+            case "DETAILS": {
+                const releaseDate = movie.release_date && !isNaN(new Date(movie.release_date).getTime())
+                    ? new Date(movie.release_date).toLocaleDateString(undefined, { dateStyle: "long" })
+                    : "Unknown";
+
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
                         <div>
                             <h4 className="font-bold text-gray-400 uppercase tracking-widest mb-2">Original Title</h4>
                             <p className="text-xl mb-6">{movie.original_title}</p>
+
+                            <h4 className="font-bold text-gray-400 uppercase tracking-widest mb-2">Release Date</h4>
+                            <p className="text-xl mb-6">{releaseDate}</p>
 
                             <h4 className="font-bold text-gray-400 uppercase tracking-widest mb-2">Original Language</h4>
                             <p className="text-xl mb-6 uppercase">{movie.original_language}</p>
@@ -185,29 +194,9 @@ const MovieDetails = () => {
                         </div>
                     </div>
                 );
-            case "GENRE":
-                return (
-                    <div className="flex flex-wrap gap-3">
-                        {movie.genres?.map(genre => (
-                            <span key={genre.id} className="px-4 py-2 bg-white/10 rounded-lg text-sm font-medium hover:bg-white/20 transition-colors cursor-default">
-                                {genre.name}
-                            </span>
-                        ))}
-                    </div>
-                );
-            case "RELEASE": {
-                const releaseDate = movie.release_date && !isNaN(new Date(movie.release_date).getTime())
-                    ? new Date(movie.release_date).toLocaleDateString(undefined, { dateStyle: "long" })
-                    : "Unknown Release Date";
-
-                return (
-                    <div className="bg-white/5 p-6 rounded-xl inline-block">
-                        <h4 className="font-bold text-gray-400 uppercase tracking-widest mb-2">Release Date</h4>
-                        <p className="text-3xl font-display">{releaseDate}</p>
-                    </div>
-                );
             }
             default:
+                return null;
                 return null;
         }
     };
@@ -341,7 +330,7 @@ const MovieDetails = () => {
 
                         {/* tabs */}
                         <div className="flex gap-6 border-b border-white/10 mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide pb-2">
-                            {["CAST", "CREW", "DETAILS", "GENRE", "RELEASE"].map((tab) => (
+                            {["CAST", "CREW", "DETAILS"].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}

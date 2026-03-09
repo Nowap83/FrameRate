@@ -19,7 +19,7 @@ func NewTMDBHandler(tmdbService *service.TMDBService) *TMDBHandler {
 	}
 }
 
-// * @param : ?query=inception&page=1&language=en-US
+// * @param : ?q=inception&page=1&language=en-US
 func (h *TMDBHandler) SearchMovies(c *gin.Context) {
 	var req dto.SearchMoviesRequest
 
@@ -55,6 +55,66 @@ func (h *TMDBHandler) GetPopularMovies(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to fetch popular movies",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    results,
+	})
+}
+
+// * @param: ?page=1&language=fr-FR
+func (h *TMDBHandler) GetTopRatedMovies(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	language := c.DefaultQuery("language", "en-US")
+
+	results, err := h.tmdbService.GetTopRatedMovies(page, language)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch top rated movies",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    results,
+	})
+}
+
+// * @param: ?page=1&language=fr-FR
+func (h *TMDBHandler) GetUpcomingMovies(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	language := c.DefaultQuery("language", "en-US")
+
+	results, err := h.tmdbService.GetUpcomingMovies(page, language)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch upcoming movies",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    results,
+	})
+}
+
+// * @param: ?timeWindow=week&language=en-US
+func (h *TMDBHandler) GetTrendingMovies(c *gin.Context) {
+	timeWindow := c.DefaultQuery("timeWindow", "week")
+	language := c.DefaultQuery("language", "en-US")
+
+	results, err := h.tmdbService.GetTrendingMovies(timeWindow, language)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch trending movies",
 			"details": err.Error(),
 		})
 		return

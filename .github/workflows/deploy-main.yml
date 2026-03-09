@@ -1,9 +1,10 @@
-name: Preprod CI/CD Pipeline
+name: Main CI/CD Pipeline
 
 on:
   push:
     branches:
-      - preprod
+      - main
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -71,7 +72,7 @@ jobs:
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          DEPLOY_PATH: "/opt/preprod"
+          DEPLOY_PATH: "/opt/main"
         run: |
           ssh $SSH_USER@$SSH_HOST "bash -s" << EOF
             # Create directory if it doesn't exist
@@ -82,12 +83,40 @@ jobs:
             if [ ! -d .git ]; then
               git init
               git remote add origin https://github.com/Nowap83/FrameRate.git
-              git fetch origin preprod
-              git checkout -f preprod
+              git fetch origin main
+              git checkout -f main
             else
-              git fetch origin preprod
-              git reset --hard origin/preprod
+              git fetch origin main
+              git reset --hard origin/main
             fi
+
+            # Handle .env file by copying it from preprod if it doesn't exist
+            if [ ! -f .env ]; then
+              echo "Copie du fichier .env depuis l'environnement preprod..."
+              cp /opt/preprod/.env .env || touch .env
+            fi
+
+            # Add prod overrides to .env if not present
+            # Add prod overrides to .env if not present. Ensure newline first, then append.
+            echo "" >> .env
+            git config --global core.autocrlf false
+            
+            # Simple replace or append for environment variables
+            sed -i '/^ENV_PREFIX=/d' .env; echo 'ENV_PREFIX=main' >> .env
+            sed -i '/^FRONTEND_URL=/d' .env; echo 'FRONTEND_URL=https://framerate.alexandre-brozzu.fr' >> .env
+            sed -i '/^VITE_API_URL=/d' .env; echo 'VITE_API_URL=https://api.framerate.alexandre-brozzu.fr/api' >> .env
+            
+            # Map external exposed ports for production
+            sed -i '/^HOST_FRONTEND_PORT=/d' .env; echo 'HOST_FRONTEND_PORT=81' >> .env
+            sed -i '/^HOST_BACKEND_PORT=/d' .env; echo 'HOST_BACKEND_PORT=8081' >> .env
+            sed -i '/^HOST_POSTGRES_PORT=/d' .env; echo 'HOST_POSTGRES_PORT=5433' >> .env
+            sed -i '/^HOST_REDIS_PORT=/d' .env; echo 'HOST_REDIS_PORT=6380' >> .env
+
+            # Restore required internal ports in case they were deleted by previous buggy deployment runs
+            sed -i '/^FRONTEND_PORT=/d' .env; echo 'FRONTEND_PORT=80' >> .env
+            sed -i '/^BACKEND_PORT=/d' .env; echo 'BACKEND_PORT=8080' >> .env
+            sed -i '/^POSTGRES_PORT=/d' .env; echo 'POSTGRES_PORT=5432' >> .env
+            sed -i '/^REDIS_PORT=/d' .env; echo 'REDIS_PORT=6379' >> .env
 
             # Restart backend/frontend via Docker Compose
             docker compose down

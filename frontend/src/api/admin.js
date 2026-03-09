@@ -3,7 +3,7 @@ import apiClient from "./apiClient";
 export const adminService = {
     getAllUsers: async () => {
         const response = await apiClient.get('/admin/users');
-        return response.data;
+        return response.data?.users || [];
     },
 
     deleteUser: async (id) => {

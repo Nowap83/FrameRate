@@ -58,6 +58,9 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 		{
 			tmdb.GET("/search", tmdbHandler.SearchMovies)
 			tmdb.GET("/popular", tmdbHandler.GetPopularMovies)
+			tmdb.GET("/trending", tmdbHandler.GetTrendingMovies)
+			tmdb.GET("/top-rated", tmdbHandler.GetTopRatedMovies)
+			tmdb.GET("/upcoming", tmdbHandler.GetUpcomingMovies)
 			tmdb.GET("/movie/:id", tmdbHandler.GetMovieDetails)
 			tmdb.GET("/movie/:id/credits", tmdbHandler.GetMovieCredits)
 			tmdb.GET("/movie/:id/videos", tmdbHandler.GetMovieVideos)

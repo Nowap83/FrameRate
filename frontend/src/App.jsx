@@ -11,6 +11,8 @@ import Settings from "./pages/Settings"
 import SearchPage from "./pages/SearchPage"
 import PersonDetails from "./pages/PersonDetails"
 import AdminDashboard from "./pages/AdminDashboard"
+import MoviesPage from "./pages/MoviesPage"
+import ComingSoonPage from "./pages/ComingSoonPage"
 import { useAuth } from "./context/AuthContext"
 import ProtectedRoute from "./components/ProtectedRoute"
 import ErrorBoundary from "./components/ErrorBoundary"
@@ -44,6 +46,16 @@ function App() {
       <Route path="/search" element={withLayout(<SearchPage />)} />
       <Route path="/person/:id" element={withLayout(<PersonDetails />)} />
       <Route path="/verify-email" element={withLayout(<VerifyEmail />)} />
+
+      {/* Explore / Top Navigation Routes */}
+      <Route path="/movies" element={withLayout(<MoviesPage />)} />
+      <Route path="/lists" element={withLayout(<ComingSoonPage title="Lists Coming Soon" />)} />
+      <Route path="/community" element={withLayout(<ComingSoonPage title="Community Coming Soon" />)} />
+
+      {/* Footer Routes */}
+      <Route path="/about" element={withLayout(<ComingSoonPage title="About Us" />)} />
+      <Route path="/terms" element={withLayout(<ComingSoonPage title="Terms of Service" />)} />
+      <Route path="/privacy" element={withLayout(<ComingSoonPage title="Privacy Policy" />)} />
 
       {/* Routes Protégées (Utilisateurs uniquement) */}
       <Route path="/profile" element={
