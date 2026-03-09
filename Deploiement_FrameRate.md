@@ -77,8 +77,3 @@ Si les tests sont validés, le job `deploy` est exécuté :
    - Forcer la synchronisation avec le code validé (`git reset --hard origin/<nom_branche>`).
    - Redémarrer gracieusement les services applicatifs via Docker Compose (`docker compose down && docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build`).
 
-## 5. Communication et Suivi
-
-Il a été convenu avec les différentes équipes impliquées que :
-- **Déploiements Pré-production** : L'équipe QA (chargée des tests) est informée par une notification automatique dès lors d'un nouveau code sur la branche `preprod`. Ils disposent de l'environnement mis à jour de manière transparente pour continuer l'acceptation client.
-- **Déploiements Production** : Sur validation des équipes métiers et QA en pré-production, une Pull Request vers `main` est approuvée, ce qui déclenchera un nouveau cycle de tests et un déploiement isolé vers les conteneurs de production sans altérer le fonctionnement de la pré-production existante.
