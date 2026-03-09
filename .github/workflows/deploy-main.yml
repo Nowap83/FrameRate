@@ -103,6 +103,8 @@ jobs:
             
             # Simple replace or append for environment variables
             sed -i '/^ENV_PREFIX=/d' .env; echo 'ENV_PREFIX=main' >> .env
+            sed -i '/^FRONTEND_URL=/d' .env; echo 'FRONTEND_URL=https://framerate.alexandre-brozzu.fr' >> .env
+            sed -i '/^VITE_API_URL=/d' .env; echo 'VITE_API_URL=https://api.framerate.alexandre-brozzu.fr/api' >> .env
             
             # Map external exposed ports for production
             sed -i '/^HOST_FRONTEND_PORT=/d' .env; echo 'HOST_FRONTEND_PORT=81' >> .env
