@@ -215,6 +215,33 @@ func (s *UserService) ChangePassword(userID uint, input dto.ChangePasswordReques
 
 // deletes the user's account
 func (s *UserService) DeleteAccount(userID uint) error {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	// anonymizer avant soft-delete pour libérer les contraintes UNIQUE
+	timestamp := fmt.Sprintf("_deleted_%d", time.Now().Unix())
+
+	newUsername := user.Username
+	if len(newUsername) > 30 {
+		newUsername = newUsername[:30]
+	}
+	newUsername += timestamp
+
+	newEmail := user.Email
+	if len(newEmail) > 230 {
+		newEmail = newEmail[:230]
+	}
+	newEmail += timestamp
+
+	if err := s.userRepo.UpdateFields(userID, map[string]interface{}{
+		"username": newUsername,
+		"email":    newEmail,
+	}); err != nil {
+		return errors.New("failed to anonymize account details before deletion")
+	}
+
 	if err := s.userRepo.Delete(userID); err != nil {
 		return errors.New("failed to delete account")
 	}
