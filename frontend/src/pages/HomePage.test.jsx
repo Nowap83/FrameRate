@@ -54,7 +54,7 @@ describe('HomePage', () => {
         renderHomePage();
 
         await waitFor(() => {
-            expect(screen.getByText('Popular on FrameRate')).toBeInTheDocument();
+            expect(screen.getByText('Trending on FrameRate')).toBeInTheDocument();
         });
 
         // Check Hero movie

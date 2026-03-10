@@ -124,5 +124,5 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.Message)
+	c.JSON(http.StatusOK, response)
 }

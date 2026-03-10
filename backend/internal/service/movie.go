@@ -82,6 +82,13 @@ func (s *MovieService) TrackMovie(userID uint, tmdbID int, req dto.TrackMovieReq
 
 	if req.IsWatched != nil {
 		track.IsWatched = *req.IsWatched
+
+		// If marking as watched without a specific date (like from the movie details popup),
+		// set the date to now so it counts towards yearly stats.
+		if track.IsWatched && req.WatchedDate == nil {
+			now := time.Now()
+			track.WatchedDate = &now
+		}
 	}
 	if req.IsFavorite != nil {
 		track.IsFavorite = *req.IsFavorite
