@@ -5,4 +5,8 @@ export const userService = {
         const response = await apiClient.get(`/users/me/films?page=${page}&limit=${limit}`);
         return response.data;
     },
+    getUserReviews: async (page = 1, limit = 20) => {
+        const response = await apiClient.get(`/users/me/reviews?page=${page}&limit=${limit}`);
+        return response.data;
+    },
 };
