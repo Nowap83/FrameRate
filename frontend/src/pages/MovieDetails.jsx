@@ -16,7 +16,7 @@ const MovieDetails = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("CAST");
     const [trailerKey, setTrailerKey] = useState(null);
-    const [interaction, setInteraction] = useState({ is_watched: false, user_rating: 0 });
+    const [interaction, setInteraction] = useState({ is_watched: false, user_rating: 0, is_watchlist: false });
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
     useDocumentTitle(movie ? movie.title : "Movie");
@@ -59,7 +59,8 @@ const MovieDetails = () => {
                 if (data) {
                     setInteraction({
                         is_watched: data.is_watched || false,
-                        user_rating: data.user_rating || 0
+                        user_rating: data.user_rating || 0,
+                        is_watchlist: data.is_watchlist || false
                     });
                 }
             } catch (error) {
@@ -113,6 +114,16 @@ const MovieDetails = () => {
         } catch (error) {
             console.error("Failed to toggle watch status", error);
             // Optionally add toast here
+        }
+    };
+
+    const handleWatchlistToggle = async () => {
+        try {
+            const newStatus = !interaction.is_watchlist;
+            await trackMovie(id, { is_watchlist: newStatus });
+            setInteraction(prev => ({ ...prev, is_watchlist: newStatus }));
+        } catch (error) {
+            console.error("Failed to toggle watchlist status", error);
         }
     };
 
@@ -214,7 +225,7 @@ const MovieDetails = () => {
     return (
         <div className="min-h-screen bg-[#12201B] text-white font-sans pb-20">
             {/* hero section */}
-            <div className="relative w-full h-[500px] overflow-hidden">
+            <div className="relative w-full h-[300px] md:h-[500px] overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#12201B] z-10" />
                 {movie.backdrop_path && (
                     <img
@@ -225,10 +236,10 @@ const MovieDetails = () => {
                 )}
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 -mt-80 relative z-20">
+            <div className="max-w-7xl mx-auto px-6 -mt-32 md:-mt-80 relative z-20">
                 <div className="flex flex-col md:flex-row gap-8 md:gap-10">
                     {/* poster */}
-                    <div className="shrink-0 w-48 md:w-72 mx-auto md:mx-0">
+                    <div className="shrink-0 w-40 md:w-72 mx-auto md:mx-0">
                         {movie.poster_path ? (
                             <img
                                 src={`${POSTER_BASE_URL}${movie.poster_path}`}
@@ -279,11 +290,11 @@ const MovieDetails = () => {
                         </div>
 
                         {/* actions card */}
-                        <div className="flex flex-wrap items-center gap-6 mb-12 bg-[#1A2C24] p-6 rounded-2xl border border-white/5 max-w-3xl">
+                        <div className="flex flex-col md:flex-row md:flex-wrap items-center gap-6 mb-12 bg-[#1A2C24] p-4 md:p-6 rounded-2xl border border-white/5 max-w-3xl">
                             {/* avg rating */}
-                            <div className="flex flex-col pr-8 border-r border-white/10">
+                            <div className="flex w-full md:w-auto flex-col md:pr-8 md:border-r border-white/10 pb-4 md:pb-0 border-b md:border-b-0 items-center md:items-start text-center md:text-left">
                                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Avg Rating</span>
-                                <div className="flex items-end gap-2">
+                                <div className="flex items-end gap-2 justify-center md:justify-start">
                                     <span className="text-4xl font-bold">{movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}</span>
                                     <div className="flex pb-1">
                                         {[...Array(5)].map((_, i) => (
@@ -299,9 +310,9 @@ const MovieDetails = () => {
                             </div>
 
                             {/* user rating */}
-                            <div className="flex flex-col pr-8 border-r border-white/10 min-w-[140px]">
+                            <div className="flex w-full md:w-auto flex-col md:pr-8 md:border-r border-white/10 min-w-[140px] pb-4 md:pb-0 border-b md:border-b-0 items-center md:items-start text-center md:text-left">
                                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Your Rating</span>
-                                <div className="mt-2.5">
+                                <div className="mt-2.5 flex justify-center md:justify-start">
                                     <RatingStars
                                         rating={interaction.user_rating}
                                         onChange={handleRatingChange}
@@ -311,7 +322,7 @@ const MovieDetails = () => {
                             </div>
 
                             {/* user actions */}
-                            <div className="flex items-center gap-4 flex-1 justify-end">
+                            <div className="flex flex-wrap items-center gap-4 w-full md:w-auto md:flex-1 justify-center md:justify-end mt-2 md:mt-0">
                                 <div className="flex flex-col items-center gap-2">
                                     <button
                                         className={`p-3 rounded-full transition-colors ${interaction.is_watched ? 'bg-mint text-emerald-950' : 'bg-white/5 text-white hover:bg-white/10'}`}
@@ -329,9 +340,21 @@ const MovieDetails = () => {
                                     Log
                                 </button>
 
-                                <button className="flex items-center gap-2 px-6 py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all">
-                                    <Plus size={20} className="stroke-[3]" />
-                                    WATCHLIST
+                                <button 
+                                    className={`flex items-center gap-2 px-6 py-3 font-bold rounded-xl transition-all ${interaction.is_watchlist ? 'bg-mint/20 text-mint border border-mint/30' : 'bg-white/5 text-white hover:bg-white/10'}`}
+                                    onClick={handleWatchlistToggle}
+                                >
+                                    {interaction.is_watchlist ? (
+                                        <>
+                                            <Heart size={20} className="fill-mint text-mint" />
+                                            IN WATCHLIST
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Plus size={20} className="stroke-[3]" />
+                                            WATCHLIST
+                                        </>
+                                    )}
                                 </button>
 
                                 <button className="flex items-center gap-2 px-6 py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all">

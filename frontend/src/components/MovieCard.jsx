@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Plus, AlignLeft } from "lucide-react";
+import { Star, Plus, Check, AlignLeft } from "lucide-react";
 import ReviewPreviewModal from "./ReviewPreviewModal";
-import { getMovieInteraction } from "../api/tmdb";
+import { getMovieInteraction, trackMovie } from "../api/tmdb";
 
 
-const MovieCard = ({ movie }) => {
+const MovieCard = ({ movie, onWatchlistChange }) => {
     // TMDB API format et Backend DB format
     const id = movie.tmdb_id || movie.id;
     const posterPath = movie.poster_url || movie.poster_path;
     const title = movie.title;
+    
+    // local state for optimistic UI updates on the card
+    const [isWatchlist, setIsWatchlist] = useState(movie.is_watchlist ?? false);
     
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [reviewData, setReviewData] = useState(null);
@@ -50,6 +53,21 @@ const MovieCard = ({ movie }) => {
         }
     };
 
+    const handleWatchlistToggle = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            const newStatus = !isWatchlist;
+            await trackMovie(id, { is_watchlist: newStatus });
+            setIsWatchlist(newStatus);
+            if (onWatchlistChange) {
+                onWatchlistChange(id, newStatus);
+            }
+        } catch (error) {
+            console.error("Failed to toggle watchlist status", error);
+        }
+    };
+
     return (
         <div className="relative aspect-[2/3] rounded-xl overflow-hidden group shadow-lg">
             <Link to={`/movie/${id}`} className="block w-full h-full">
@@ -73,11 +91,11 @@ const MovieCard = ({ movie }) => {
                             <Star size={20} />
                         </button>
                         <button
-                            className="p-3 bg-white/20 rounded-full text-white hover:scale-110 transition-transform shadow-lg"
-                            onClick={(e) => e.preventDefault()}
-                            title="Add to Watchlist"
+                            className={`p-3 rounded-full hover:scale-110 transition-transform shadow-lg ${isWatchlist ? 'bg-mint text-emerald-950' : 'bg-white/20 text-white'}`}
+                            onClick={handleWatchlistToggle}
+                            title={isWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
                         >
-                            <Plus size={20} />
+                            {isWatchlist ? <Check size={20} className="stroke-[3]" /> : <Plus size={20} />}
                         </button>
                     </div>
 

@@ -77,7 +77,7 @@ const StatsCard = ({ label, value, subtext, trend }) => (
         </div>
         <div>
             <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-white tracking-tight group-hover:text-[var(--color-primary)] transition-colors">{value}</span>
+                <span className="text-2xl md:text-3xl font-bold text-white tracking-tight group-hover:text-[var(--color-primary)] transition-colors">{value}</span>
                 {trend && <span className="text-xs text-green-400 font-medium">{trend}</span>}
             </div>
             {subtext && <span className="text-xs text-[var(--color-primary)] opacity-80 font-medium">{subtext}</span>}
@@ -92,7 +92,7 @@ const SectionHeader = ({ title, action }) => (
     </div>
 );
 
-const MovieGrid = ({ movies }) => {
+const MovieGrid = ({ movies, onWatchlistChange }) => {
     if (!movies || movies.length === 0) return (
         <div className="h-40 flex items-center justify-center border border-dashed border-white/10 rounded-xl">
             <p className="text-gray-500 text-sm">No movies found.</p>
@@ -102,7 +102,11 @@ const MovieGrid = ({ movies }) => {
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {movies.map(movie => (
-                <MovieCard key={movie.id || movie.tmdb_id} movie={movie} />
+                <MovieCard 
+                    key={movie.id || movie.tmdb_id} 
+                    movie={movie} 
+                    onWatchlistChange={onWatchlistChange}
+                />
             ))}
         </div>
     );
@@ -117,6 +121,8 @@ const Profile = () => {
     const [filmsLoading, setFilmsLoading] = useState(false);
     const [userReviews, setUserReviews] = useState([]);
     const [reviewsLoading, setReviewsLoading] = useState(false);
+    const [userWatchlist, setUserWatchlist] = useState([]);
+    const [watchlistLoading, setWatchlistLoading] = useState(false);
 
     const fetchProfile = async () => {
         try {
@@ -155,6 +161,26 @@ const Profile = () => {
         }
     };
 
+    const fetchUserWatchlist = async () => {
+        try {
+            setWatchlistLoading(true);
+            const { userService } = await import('../api/user');
+            const data = await userService.getUserWatchlist(1, 50);
+            setUserWatchlist(data?.movies || []);
+        } catch (error) {
+            console.error("Failed to fetch user watchlist:", error);
+        } finally {
+            setWatchlistLoading(false);
+        }
+    };
+
+    const handleWatchlistChange = (movieId, isWatchlisted) => {
+        if (activeTab === 'Watchlist' && !isWatchlisted) {
+            // Remove the movie from the local list if it's no longer watchlisted
+            setUserWatchlist(prev => prev.filter(m => (m.tmdb_id || m.id) !== movieId));
+        }
+    };
+
     useEffect(() => {
         if (!authLoading) {
             if (authUser) {
@@ -170,6 +196,8 @@ const Profile = () => {
             fetchUserFilms();
         } else if (activeTab === 'Reviews' && userReviews.length === 0) {
             fetchUserReviews();
+        } else if (activeTab === 'Watchlist' && userWatchlist.length === 0) {
+            fetchUserWatchlist();
         }
     }, [activeTab]);
 
@@ -225,7 +253,7 @@ const Profile = () => {
 
             <div className="max-w-7xl mx-auto px-4 md:px-8">
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-16">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mb-16">
                     <StatsCard label="Total Films" value={stats?.total_films ? stats.total_films.toLocaleString() : 0} />
                     <StatsCard label="Movies This Year" value={stats?.movies_this_year || 0} trend="2026" />
                     <StatsCard label="Reviews" value={stats?.reviews || 0} />
@@ -234,7 +262,7 @@ const Profile = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex items-center justify-center md:justify-start gap-12 border-b border-white/5 mb-12 overflow-x-auto pb-1 scrollbar-hide">
+                <div className="flex items-center justify-center md:justify-start gap-6 md:gap-12 border-b border-white/5 mb-12 overflow-x-auto pb-1 scrollbar-hide">
                     {['Profile', 'Activity', 'Films', 'Reviews', 'Diary', 'Watchlist', 'Lists'].map((tab, i) => (
                         <button
                             key={tab}
@@ -294,9 +322,20 @@ const Profile = () => {
                                 )}
                             </section>
                         )}
+                        
+                        {activeTab === 'Watchlist' && (
+                            <section>
+                                <SectionHeader title="Your Watchlist" />
+                                {watchlistLoading ? (
+                                    <div className="h-40 flex items-center justify-center text-gray-500"><div className="loader"></div></div>
+                                ) : (
+                                    <MovieGrid movies={userWatchlist} onWatchlistChange={handleWatchlistChange} />
+                                )}
+                            </section>
+                        )}
 
                         {/* Other tabs placeholders */}
-                        {!['Profile', 'Films', 'Reviews'].includes(activeTab) && (
+                        {!['Profile', 'Films', 'Reviews', 'Watchlist'].includes(activeTab) && (
                             <div className="h-40 flex items-center justify-center border border-dashed border-white/10 rounded-xl">
                                 <p className="text-gray-500 text-sm">{activeTab} content coming soon.</p>
                             </div>
