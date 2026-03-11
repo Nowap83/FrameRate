@@ -87,6 +87,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, rdb *redis.Client, emailService *ut
 				users.GET("/me", userHandler.GetProfile)
 				users.GET("/me/films", userHandler.GetMyFilms)
 				users.GET("/me/reviews", userHandler.GetMyReviews)
+				users.GET("/me/watchlist", userHandler.GetMyWatchlist)
 				users.PUT("/me", userHandler.UpdateProfile)
 				users.POST("/me/avatar", userHandler.UploadAvatar)
 				users.PUT("/me/password", userHandler.ChangePassword)

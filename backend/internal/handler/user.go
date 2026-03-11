@@ -110,6 +110,39 @@ func (h *UserHandler) GetMyReviews(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// retrieves the paginated list of watchlist movies for the current user
+func (h *UserHandler) GetMyWatchlist(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "20")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 20
+	}
+	if limit > 50 {
+		limit = 50 // cap for watchlist per page
+	}
+
+	response, err := h.userService.GetMyWatchlist(userID.(uint), page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 // updates the user's profile
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	userID, exists := c.Get("userID")
