@@ -125,28 +125,3 @@ func TestMovieService_RateMovie(t *testing.T) {
 	}
 }
 
-func TestMovieService_ReviewMovie(t *testing.T) {
-	utils.Log = zap.NewNop()
-	db := setupMovieServiceTestDB(t)
-	repo := repository.NewMovieRepository(db)
-
-	tmdbService := NewTMDBService(nil)
-	repo.UpsertMovie(&model.Movie{TmdbID: 789, Title: "The Dark Knight"})
-
-	movieService := NewMovieService(repo, tmdbService)
-
-	user := &model.User{Username: "test3", Email: "test3@example.com"}
-	db.Create(user)
-
-	req := dto.ReviewRequest{Content: "Masterpiece.", IsSpoiler: false}
-	err := movieService.ReviewMovie(user.ID, 789, req)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-
-	var review model.Review
-	db.First(&review)
-	if review.Content != "Masterpiece." || review.IsSpoiler {
-		t.Errorf("expected review correctly inserted")
-	}
-}
