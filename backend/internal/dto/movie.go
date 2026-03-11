@@ -12,6 +12,7 @@ type MovieListResponse struct {
 	TotalRatings      int      `json:"total_ratings"`
 	UserRating        *float32 `json:"user_rating,omitempty"`
 	HasReview         bool     `json:"has_review"`
+	IsWatchlist       bool     `json:"is_watchlist"`
 }
 
 type PaginatedMoviesResponse struct {

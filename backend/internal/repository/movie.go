@@ -158,8 +158,9 @@ func (r *MovieRepository) UpdateFavoriteFilms(userID uint, movies []model.Movie)
 // mapping struct for the join query
 type WatchedMovieWithRating struct {
 	model.Movie
-	UserRating *float32 `gorm:"column:user_rating"`
-	HasReview  bool     `gorm:"column:has_review"`
+	UserRating  *float32 `gorm:"column:user_rating"`
+	HasReview   bool     `gorm:"column:has_review"`
+	IsWatchlist bool     `gorm:"column:is_watchlist"`
 }
 
 func (r *MovieRepository) GetWatchedFilmsWithRatings(userID uint, page, limit int) ([]WatchedMovieWithRating, int64, error) {
@@ -169,7 +170,7 @@ func (r *MovieRepository) GetWatchedFilmsWithRatings(userID uint, page, limit in
 	offset := (page - 1) * limit
 
 	query := r.db.Table("movies").
-		Select("movies.*, rates.rating as user_rating, CASE WHEN reviews.content IS NOT NULL AND reviews.content != '' THEN true ELSE false END as has_review").
+		Select("movies.*, rates.rating as user_rating, CASE WHEN reviews.content IS NOT NULL AND reviews.content != '' THEN true ELSE false END as has_review, tracks.is_watchlist").
 		Joins("JOIN tracks ON tracks.movie_id = movies.id").
 		Joins("LEFT JOIN rates ON rates.movie_id = movies.id AND rates.user_id = tracks.user_id").
 		Joins("LEFT JOIN reviews ON reviews.movie_id = movies.id AND reviews.user_id = tracks.user_id").
@@ -225,6 +226,34 @@ func (r *MovieRepository) GetReviews(userID uint, page, limit int) ([]UserReview
 
 	if err := query.
 		Order("reviews.created_at DESC").
+		Offset(offset).
+		Limit(limit).
+		Find(&results).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return results, total, nil
+}
+
+func (r *MovieRepository) GetWatchlist(userID uint, page, limit int) ([]WatchedMovieWithRating, int64, error) {
+	var results []WatchedMovieWithRating
+	var total int64
+
+	offset := (page - 1) * limit
+
+	query := r.db.Table("movies").
+		Select("movies.*, rates.rating as user_rating, CASE WHEN reviews.content IS NOT NULL AND reviews.content != '' THEN true ELSE false END as has_review, tracks.is_watchlist").
+		Joins("JOIN tracks ON tracks.movie_id = movies.id").
+		Joins("LEFT JOIN rates ON rates.movie_id = movies.id AND rates.user_id = tracks.user_id").
+		Joins("LEFT JOIN reviews ON reviews.movie_id = movies.id AND reviews.user_id = tracks.user_id").
+		Where("tracks.user_id = ? AND tracks.is_watchlist = ?", userID, true)
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if err := query.
+		Order("tracks.updated_at DESC").
 		Offset(offset).
 		Limit(limit).
 		Find(&results).Error; err != nil {

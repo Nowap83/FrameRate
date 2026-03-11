@@ -123,6 +123,7 @@ func (s *UserService) GetMyFilms(userID uint, page, limit int) (*dto.PaginatedMo
 			AverageUserRating: 0.0,
 			UserRating:        m.UserRating,
 			HasReview:         m.HasReview,
+			IsWatchlist:       m.IsWatchlist,
 		})
 	}
 
@@ -173,6 +174,39 @@ func (s *UserService) GetMyReviews(userID uint, page, limit int) (*dto.Paginated
 	}
 
 	return response, nil
+}
+
+func (s *UserService) GetMyWatchlist(userID uint, page, limit int) (dto.PaginatedMoviesResponse, error) {
+	movies, total, err := s.movieRepo.GetWatchlist(userID, page, limit)
+	if err != nil {
+		return dto.PaginatedMoviesResponse{}, err
+	}
+
+	var moviesResp []dto.MovieListResponse
+	for _, m := range movies {
+		moviesResp = append(moviesResp, dto.MovieListResponse{
+			ID:                m.ID,
+			TmdbID:            m.TmdbID,
+			Title:             m.Title,
+			ReleaseYear:       m.ReleaseYear,
+			PosterURL:         m.PosterURL,
+			AverageUserRating: 0,
+			TotalRatings:      0,
+			UserRating:        m.UserRating,
+			HasReview:         m.HasReview,
+			IsWatchlist:       m.IsWatchlist,
+		})
+	}
+
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+
+	return dto.PaginatedMoviesResponse{
+		Movies:     moviesResp,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: totalPages,
+	}, nil
 }
 
 // updates user profile information
