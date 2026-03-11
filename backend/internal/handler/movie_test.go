@@ -44,7 +44,6 @@ func setupMovieHandlerTest() (*gin.Engine, *gorm.DB) {
 	{
 		api.POST("/:tmdb_id/track", movieHandler.TrackMovie)
 		api.POST("/:tmdb_id/rate", movieHandler.RateMovie)
-		api.POST("/:tmdb_id/review", movieHandler.ReviewMovie)
 	}
 
 	return r, db
@@ -112,32 +111,5 @@ func TestMovieHandler_RateMovie(t *testing.T) {
 	db.First(&rate, "user_id = ? AND movie_id = ?", 1, 1)
 	if rate.Rating != 4.5 {
 		t.Errorf("expected rating 4.5, got %f", rate.Rating)
-	}
-}
-
-func TestMovieHandler_ReviewMovie(t *testing.T) {
-	r, db := setupMovieHandlerTest()
-
-	user := &model.User{ID: 1, Username: "reviewuser", Email: "review@example.com"}
-	db.Create(user)
-	db.Create(&model.Movie{TmdbID: 300, Title: "Test Movie 300"})
-
-	reqBody := dto.ReviewRequest{Content: "Great!", IsSpoiler: false}
-	body, _ := json.Marshal(reqBody)
-
-	// Valid Request
-	req, _ := http.NewRequest("POST", "/movie/300/review", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200 OK, got %d", w.Code)
-	}
-
-	var review model.Review
-	db.First(&review, "user_id = ? AND movie_id = ?", 1, 1)
-	if review.Content != "Great!" {
-		t.Errorf("expected review 'Great!', got %s", review.Content)
 	}
 }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getMovieDetails, getMovieVideos, getMovieInteraction, trackMovie, rateMovie } from "../api/tmdb";
+import { getMovieDetails, getMovieVideos, getMovieInteraction, trackMovie, rateMovie, logMovie } from "../api/tmdb";
 import Button from "../components/Button";
 import RatingStars from "../components/RatingStars";
+import ReviewModal from "../components/ReviewModal";
 import { Star, Eye, Plus, List, Play, Heart, User } from "lucide-react";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 
@@ -16,6 +17,7 @@ const MovieDetails = () => {
     const [activeTab, setActiveTab] = useState("CAST");
     const [trailerKey, setTrailerKey] = useState(null);
     const [interaction, setInteraction] = useState({ is_watched: false, user_rating: 0 });
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
     useDocumentTitle(movie ? movie.title : "Movie");
 
@@ -116,16 +118,24 @@ const MovieDetails = () => {
 
     const handleRatingChange = async (rating) => {
         try {
-            if (rating === 0) {
-                // The API doesn't support deleting a rating explicitly unless passed as 0 and handled, 
-                // assuming our backend permits un-rating (or we ignore it for now). 
-                // Wait, our backend validation says min=0, so rating=0 is allowed.
-            }
             await rateMovie(id, { rating: Number(rating) });
             // Rating a movie automatically marks it as watched on the backend, so we sync UI
             setInteraction(prev => ({ ...prev, user_rating: rating, is_watched: true }));
         } catch (error) {
             console.error("Failed to rate movie", error);
+        }
+    };
+
+    const handleLogSave = async (logData) => {
+        try {
+            await logMovie(id, logData);
+            setInteraction(prev => ({ 
+                ...prev, 
+                user_rating: logData.rating || prev.user_rating, 
+                is_watched: logData.watched_date ? true : prev.is_watched 
+            }));
+        } catch (error) {
+            console.error("Failed to save log", error);
         }
     };
 
@@ -312,6 +322,13 @@ const MovieDetails = () => {
                                     </button>
                                 </div>
 
+                                <button 
+                                    className="flex items-center gap-2 px-6 py-3 bg-[#00E054] text-white font-bold rounded-xl hover:bg-[#00c248] transition-all"
+                                    onClick={() => setIsReviewModalOpen(true)}
+                                >
+                                    Log
+                                </button>
+
                                 <button className="flex items-center gap-2 px-6 py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all">
                                     <Plus size={20} className="stroke-[3]" />
                                     WATCHLIST
@@ -348,6 +365,15 @@ const MovieDetails = () => {
                     </div>
                 </div>
             </div>
+
+            <ReviewModal 
+                isOpen={isReviewModalOpen}
+                onClose={() => setIsReviewModalOpen(false)}
+                movie={movie}
+                initialRating={interaction.user_rating}
+                initialWatched={interaction.is_watched}
+                onSave={handleLogSave}
+            />
         </div>
     );
 };

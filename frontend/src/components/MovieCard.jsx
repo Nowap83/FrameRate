@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Plus } from "lucide-react";
+import { Star, Plus, AlignLeft } from "lucide-react";
+import ReviewPreviewModal from "./ReviewPreviewModal";
+import { getMovieInteraction } from "../api/tmdb";
 
 
 const MovieCard = ({ movie }) => {
@@ -8,6 +11,9 @@ const MovieCard = ({ movie }) => {
     const id = movie.tmdb_id || movie.id;
     const posterPath = movie.poster_url || movie.poster_path;
     const title = movie.title;
+    
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [reviewData, setReviewData] = useState(null);
 
     // rating logic: user_rating si available (Profile), sinon vote_average (TMDB)
     let rating = null;
@@ -22,6 +28,27 @@ const MovieCard = ({ movie }) => {
     const year = releaseDate ? new Date(releaseDate).getFullYear() : 'Unknown';
 
     if (!posterPath) return null; // pas de render si pas d'image
+
+    const handleReviewClick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        try {
+            const data = await getMovieInteraction(id);
+            if (data && data.user_review) {
+                setReviewData({
+                    title: movie.title,
+                    release_year: year !== 'Unknown' ? year : 0,
+                    rating: data.user_rating || 0,
+                    content: data.user_review.content,
+                    watched_date: data.watched_date
+                });
+                setIsReviewModalOpen(true);
+            }
+        } catch (error) {
+            console.error("Failed to fetch review", error);
+        }
+    };
 
     return (
         <div className="relative aspect-[2/3] rounded-xl overflow-hidden group shadow-lg">
@@ -60,6 +87,16 @@ const MovieCard = ({ movie }) => {
                     </div>
                 </div>
 
+                {/* review badge */}
+                {movie.has_review && (
+                    <div 
+                        className="absolute top-2 left-2 bg-black/70 backdrop-blur-md p-1.5 rounded-md flex items-center ring-1 ring-white/10 z-20 transition-transform group-hover:scale-110 cursor-pointer"
+                        onClick={handleReviewClick}
+                    >
+                        <AlignLeft size={14} className="text-[var(--color-primary)]" />
+                    </div>
+                )}
+
                 {/* rating badge */}
                 {rating && (
                     <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md flex items-center gap-1 ring-1 ring-white/10 z-10">
@@ -68,6 +105,12 @@ const MovieCard = ({ movie }) => {
                     </div>
                 )}
             </Link>
+            
+            <ReviewPreviewModal 
+                isOpen={isReviewModalOpen} 
+                onClose={() => setIsReviewModalOpen(false)} 
+                review={reviewData} 
+            />
         </div>
     );
 };

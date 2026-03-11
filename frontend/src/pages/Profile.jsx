@@ -8,6 +8,7 @@ import useDocumentTitle from '../hooks/useDocumentTitle';
 import apiClient from '../api/apiClient';
 import MovieCard from '../components/MovieCard';
 import RatingStars from '../components/RatingStars';
+import ReviewCard from '../components/ReviewCard';
 
 const ProfileHeader = ({ user }) => (
     <div className="relative mb-8 md:mb-12 mt-20 md:mt-24 px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-end gap-6">
@@ -114,6 +115,8 @@ const Profile = () => {
     const [activeTab, setActiveTab] = useState('Profile');
     const [userFilms, setUserFilms] = useState([]);
     const [filmsLoading, setFilmsLoading] = useState(false);
+    const [userReviews, setUserReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
 
     const fetchProfile = async () => {
         try {
@@ -139,6 +142,19 @@ const Profile = () => {
         }
     };
 
+    const fetchUserReviews = async () => {
+        try {
+            setReviewsLoading(true);
+            const { userService } = await import('../api/user');
+            const data = await userService.getUserReviews(1, 20);
+            setUserReviews(data?.reviews || []);
+        } catch (error) {
+            console.error("Failed to fetch user reviews:", error);
+        } finally {
+            setReviewsLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (!authLoading) {
             if (authUser) {
@@ -152,6 +168,8 @@ const Profile = () => {
     useEffect(() => {
         if (activeTab === 'Films' && userFilms.length === 0) {
             fetchUserFilms();
+        } else if (activeTab === 'Reviews' && userReviews.length === 0) {
+            fetchUserReviews();
         }
     }, [activeTab]);
 
@@ -258,8 +276,27 @@ const Profile = () => {
                             </section>
                         )}
 
+                        {activeTab === 'Reviews' && (
+                            <section>
+                                <SectionHeader title="Your Reviews" />
+                                {reviewsLoading ? (
+                                    <div className="h-40 flex items-center justify-center text-gray-500"><div className="loader"></div></div>
+                                ) : userReviews.length === 0 ? (
+                                    <div className="h-40 flex items-center justify-center border border-dashed border-white/10 rounded-xl">
+                                        <p className="text-gray-500 text-sm">No reviews found.</p>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col bg-white/5 rounded-xl">
+                                        {userReviews.map((review, idx) => (
+                                            <ReviewCard key={idx} review={review} />
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+                        )}
+
                         {/* Other tabs placeholders */}
-                        {!['Profile', 'Films'].includes(activeTab) && (
+                        {!['Profile', 'Films', 'Reviews'].includes(activeTab) && (
                             <div className="h-40 flex items-center justify-center border border-dashed border-white/10 rounded-xl">
                                 <p className="text-gray-500 text-sm">{activeTab} content coming soon.</p>
                             </div>

@@ -11,6 +11,7 @@ type MovieListResponse struct {
 	AverageUserRating float32  `json:"average_user_rating"`
 	TotalRatings      int      `json:"total_ratings"`
 	UserRating        *float32 `json:"user_rating,omitempty"`
+	HasReview         bool     `json:"has_review"`
 }
 
 type PaginatedMoviesResponse struct {
@@ -110,13 +111,36 @@ type RateMovieRequest struct {
 	Rating float32 `json:"rating" binding:"required,min=0,max=5"`
 }
 
-type ReviewRequest struct {
-	Content   string `json:"content" binding:"required"`
-	IsSpoiler bool   `json:"is_spoiler"`
+type LogMovieRequest struct {
+	Rating      *float32   `json:"rating,omitempty"`
+	ReviewText  *string    `json:"review_text,omitempty"`
+	IsSpoiler   *bool      `json:"is_spoiler,omitempty"`
+	WatchedDate *time.Time `json:"watched_date,omitempty"`
 }
 
 type ReviewResponse struct {
 	Content   string    `json:"content"`
 	IsSpoiler bool      `json:"is_spoiler"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type UserReviewResponse struct {
+	MovieID       uint       `json:"movie_id"`
+	TmdbID        int        `json:"tmdb_id"`
+	Title         string     `json:"title"`
+	ReleaseYear   int        `json:"release_year"`
+	PosterURL     string     `json:"poster_url"`
+	Rating        *float32   `json:"rating,omitempty"`
+	Content       string     `json:"content"`
+	IsSpoiler     bool       `json:"is_spoiler"`
+	WatchedDate   *time.Time `json:"watched_date,omitempty"`
+	ReviewedAt    time.Time  `json:"reviewed_at"`
+}
+
+type PaginatedReviewsResponse struct {
+	Reviews    []UserReviewResponse `json:"reviews"`
+	Total      int64                `json:"total"`
+	Page       int                  `json:"page"`
+	Limit      int                  `json:"limit"`
+	TotalPages int                  `json:"total_pages"`
 }

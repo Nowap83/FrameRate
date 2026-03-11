@@ -65,7 +65,7 @@ func (h *MovieHandler) RateMovie(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Movie rating updated successfully"})
 }
 
-func (h *MovieHandler) ReviewMovie(c *gin.Context) {
+func (h *MovieHandler) LogMovie(c *gin.Context) {
 	tmdbID, err := strconv.Atoi(c.Param("tmdb_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid movie ID"})
@@ -74,18 +74,18 @@ func (h *MovieHandler) ReviewMovie(c *gin.Context) {
 
 	userID, _ := c.Get("userID")
 
-	var req dto.ReviewRequest
+	var req dto.LogMovieRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.movieService.ReviewMovie(userID.(uint), tmdbID, req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to review movie", "details": err.Error()})
+	if err := h.movieService.LogMovie(userID.(uint), tmdbID, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to log movie", "details": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Movie review updated successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Movie logged successfully"})
 }
 
 func (h *MovieHandler) GetMovieInteraction(c *gin.Context) {

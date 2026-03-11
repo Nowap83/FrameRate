@@ -36,4 +36,9 @@ export const rateMovie = async (id, data) => {
     return response.data;
 };
 
+export const logMovie = async (id, data) => {
+    const response = await apiClient.post(`/movies/${id}/log`, data);
+    return response.data;
+};
+
 

@@ -136,20 +136,63 @@ func (s *MovieService) RateMovie(userID uint, tmdbID int, req dto.RateMovieReque
 	return s.movieRepo.UpsertTrack(track)
 }
 
-func (s *MovieService) ReviewMovie(userID uint, tmdbID int, req dto.ReviewRequest) error {
+func (s *MovieService) LogMovie(userID uint, tmdbID int, req dto.LogMovieRequest) error {
 	movie, err := s.ensureMovieExists(tmdbID)
 	if err != nil {
 		return err
 	}
 
-	review := &model.Review{
-		UserID:    userID,
-		MovieID:   movie.ID,
-		Content:   req.Content,
-		IsSpoiler: req.IsSpoiler,
+	now := time.Now()
+	watchedDate := &now
+	if req.WatchedDate != nil {
+		watchedDate = req.WatchedDate
 	}
 
-	return s.movieRepo.UpsertReview(review)
+	// watched automatically
+	track := &model.Track{
+		UserID:      userID,
+		MovieID:     movie.ID,
+		IsWatched:   true,
+		WatchedDate: watchedDate,
+	}
+
+	if err := s.movieRepo.UpsertTrack(track); err != nil {
+		return fmt.Errorf("failed to tracking movie: %w", err)
+	}
+
+	// rating if provided
+	if req.Rating != nil && *req.Rating >= 0 {
+		if float64(*req.Rating*2) != float64(int(*req.Rating*2)) {
+			return errors.New("rating must be in increments of 0.5")
+		}
+		rate := &model.Rate{
+			UserID:  userID,
+			MovieID: movie.ID,
+			Rating:  *req.Rating,
+		}
+		if err := s.movieRepo.UpsertRate(rate); err != nil {
+			return fmt.Errorf("failed to rate movie: %w", err)
+		}
+	}
+
+	// review if provided
+	if req.ReviewText != nil && *req.ReviewText != "" {
+		isSpoiler := false
+		if req.IsSpoiler != nil {
+			isSpoiler = *req.IsSpoiler
+		}
+		review := &model.Review{
+			UserID:    userID,
+			MovieID:   movie.ID,
+			Content:   *req.ReviewText,
+			IsSpoiler: isSpoiler,
+		}
+		if err := s.movieRepo.UpsertReview(review); err != nil {
+			return fmt.Errorf("failed to review movie: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (s *MovieService) GetMovieInteraction(userID uint, tmdbID int) (*dto.UserInteractionResponse, error) {
