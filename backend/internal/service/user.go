@@ -122,6 +122,7 @@ func (s *UserService) GetMyFilms(userID uint, page, limit int) (*dto.PaginatedMo
 			PosterURL:         m.PosterURL,
 			AverageUserRating: 0.0,
 			UserRating:        m.UserRating,
+			HasReview:         m.HasReview,
 		})
 	}
 
@@ -129,6 +130,42 @@ func (s *UserService) GetMyFilms(userID uint, page, limit int) (*dto.PaginatedMo
 
 	response := &dto.PaginatedMoviesResponse{
 		Movies:     movieResponses,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: totalPages,
+	}
+
+	return response, nil
+}
+
+// fetches paginated full reviews for a given user
+func (s *UserService) GetMyReviews(userID uint, page, limit int) (*dto.PaginatedReviewsResponse, error) {
+	reviews, total, err := s.movieRepo.GetReviews(userID, page, limit)
+	if err != nil {
+		return nil, errors.New("failed to fetch user reviews")
+	}
+
+	var reviewResponses []dto.UserReviewResponse
+	for _, r := range reviews {
+		reviewResponses = append(reviewResponses, dto.UserReviewResponse{
+			MovieID:     r.MovieID,
+			TmdbID:      r.TmdbID,
+			Title:       r.Title,
+			ReleaseYear: r.ReleaseYear,
+			PosterURL:   r.PosterURL,
+			Rating:      r.Rating,
+			Content:     r.Content,
+			IsSpoiler:   r.IsSpoiler,
+			WatchedDate: r.WatchedDate,
+			ReviewedAt:  r.ReviewedAt,
+		})
+	}
+
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+
+	response := &dto.PaginatedReviewsResponse{
+		Reviews:    reviewResponses,
 		Total:      total,
 		Page:       page,
 		Limit:      limit,

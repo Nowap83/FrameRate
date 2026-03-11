@@ -159,6 +159,7 @@ func (r *MovieRepository) UpdateFavoriteFilms(userID uint, movies []model.Movie)
 type WatchedMovieWithRating struct {
 	model.Movie
 	UserRating *float32 `gorm:"column:user_rating"`
+	HasReview  bool     `gorm:"column:has_review"`
 }
 
 func (r *MovieRepository) GetWatchedFilmsWithRatings(userID uint, page, limit int) ([]WatchedMovieWithRating, int64, error) {
@@ -168,9 +169,10 @@ func (r *MovieRepository) GetWatchedFilmsWithRatings(userID uint, page, limit in
 	offset := (page - 1) * limit
 
 	query := r.db.Table("movies").
-		Select("movies.*, rates.rating as user_rating").
+		Select("movies.*, rates.rating as user_rating, CASE WHEN reviews.content IS NOT NULL AND reviews.content != '' THEN true ELSE false END as has_review").
 		Joins("JOIN tracks ON tracks.movie_id = movies.id").
 		Joins("LEFT JOIN rates ON rates.movie_id = movies.id AND rates.user_id = tracks.user_id").
+		Joins("LEFT JOIN reviews ON reviews.movie_id = movies.id AND reviews.user_id = tracks.user_id").
 		Where("tracks.user_id = ? AND tracks.is_watched = ?", userID, true)
 
 	// get total count
@@ -181,6 +183,48 @@ func (r *MovieRepository) GetWatchedFilmsWithRatings(userID uint, page, limit in
 	// get paginated results
 	if err := query.
 		Order("tracks.watched_date DESC, tracks.updated_at DESC").
+		Offset(offset).
+		Limit(limit).
+		Find(&results).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return results, total, nil
+}
+
+// mapping struct for returning reviews
+type UserReviewResult struct {
+	MovieID     uint       `gorm:"column:movie_id"`
+	TmdbID      int        `gorm:"column:tmdb_id"`
+	Title       string     `gorm:"column:title"`
+	ReleaseYear int        `gorm:"column:release_year"`
+	PosterURL   string     `gorm:"column:poster_url"`
+	Rating      *float32   `gorm:"column:rating"`
+	Content     string     `gorm:"column:content"`
+	IsSpoiler   bool       `gorm:"column:is_spoiler"`
+	WatchedDate *time.Time `gorm:"column:watched_date"`
+	ReviewedAt  time.Time  `gorm:"column:reviewed_at"`
+}
+
+func (r *MovieRepository) GetReviews(userID uint, page, limit int) ([]UserReviewResult, int64, error) {
+	var results []UserReviewResult
+	var total int64
+
+	offset := (page - 1) * limit
+
+	query := r.db.Table("reviews").
+		Select("movies.id as movie_id, movies.tmdb_id, movies.title, movies.release_year, movies.poster_url, rates.rating, reviews.content, reviews.is_spoiler, tracks.watched_date, reviews.created_at as reviewed_at").
+		Joins("JOIN movies ON movies.id = reviews.movie_id").
+		Joins("LEFT JOIN tracks ON tracks.movie_id = reviews.movie_id AND tracks.user_id = reviews.user_id").
+		Joins("LEFT JOIN rates ON rates.movie_id = reviews.movie_id AND rates.user_id = reviews.user_id").
+		Where("reviews.user_id = ?", userID)
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if err := query.
+		Order("reviews.created_at DESC").
 		Offset(offset).
 		Limit(limit).
 		Find(&results).Error; err != nil {
