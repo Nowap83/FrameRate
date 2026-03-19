@@ -143,11 +143,7 @@ const Settings = () => {
             // We do NOT update profile_picture_url via this form anymore (use Avatar tab)
             delete cleanFormData.profile_picture_url;
 
-            // Remove empty strings for optional fields to avoid validation errors
-            if (!cleanFormData.website) delete cleanFormData.website;
-            if (!cleanFormData.location) delete cleanFormData.location;
-            if (!cleanFormData.given_name) delete cleanFormData.given_name;
-            if (!cleanFormData.family_name) delete cleanFormData.family_name;
+            // Do not remove empty strings here so that they are sent to the backend and can be cleared in the DB
 
             const payload = {
                 ...cleanFormData,
