@@ -102,9 +102,9 @@ const MovieGrid = ({ movies, onWatchlistChange }) => {
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {movies.map(movie => (
-                <MovieCard 
-                    key={movie.id || movie.tmdb_id} 
-                    movie={movie} 
+                <MovieCard
+                    key={movie.id || movie.tmdb_id}
+                    movie={movie}
                     onWatchlistChange={onWatchlistChange}
                 />
             ))}
@@ -322,7 +322,7 @@ const Profile = () => {
                                 )}
                             </section>
                         )}
-                        
+
                         {activeTab === 'Watchlist' && (
                             <section>
                                 <SectionHeader title="Your Watchlist" />
@@ -391,33 +391,6 @@ const Profile = () => {
                                                 </div>
                                             );
                                         })}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="glass-panel p-8 rounded-2xl">
-                            <h3 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">Following Activity</h3>
-                            <div className="space-y-6">
-                                <div className="flex gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0">
-                                        <Film size={18} />
-                                    </div>
-                                    <div className="text-sm leading-relaxed">
-                                        <span className="font-bold text-white">Alex_Reels</span>
-                                        <span className="text-gray-400"> liked your review of </span>
-                                        <Link to="#" className="text-[var(--color-primary)] hover:underline">Dune</Link>
-                                        <p className="text-xs text-gray-600 mt-1 font-medium">2 HOURS AGO</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0">
-                                        <User size={18} />
-                                    </div>
-                                    <div className="text-sm leading-relaxed">
-                                        <span className="font-bold text-white">Sara_Cine</span>
-                                        <span className="text-gray-400"> started following you</span>
-                                        <p className="text-xs text-gray-600 mt-1 font-medium">5 HOURS AGO</p>
                                     </div>
                                 </div>
                             </div>
