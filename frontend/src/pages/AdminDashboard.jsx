@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { Navigate } from "react-router-dom";
 import { adminService } from "../api/admin";
 import { Users, Trash2, LayoutDashboard, Search, ShieldAlert } from "lucide-react";
+import { getAvatarUrl } from "../utils/image";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 
 export default function AdminDashboard() {
@@ -147,7 +148,7 @@ export default function AdminDashboard() {
                                                             <td className="p-4">
                                                                 <div className="flex items-center gap-3">
                                                                     {u.profile_picture_url ? (
-                                                                        <img src={`http://localhost:8080${u.profile_picture_url}`} alt={u.username} className="w-10 h-10 rounded-full object-cover border border-[#ffffff1a]" />
+                                                                        <img src={getAvatarUrl(u.profile_picture_url)} alt={u.username} className="w-10 h-10 rounded-full object-cover border border-[#ffffff1a]" />
                                                                     ) : (
                                                                         <div className="w-10 h-10 rounded-full bg-[var(--color-accent)]/20 flex items-center justify-center text-[var(--color-accent)] font-bold border border-[var(--color-accent)]/30">
                                                                             {u.username.charAt(0).toUpperCase()}
