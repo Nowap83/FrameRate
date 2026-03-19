@@ -109,7 +109,7 @@ type TrackMovieRequest struct {
 }
 
 type RateMovieRequest struct {
-	Rating float32 `json:"rating" binding:"required,min=0,max=5"`
+	Rating float32 `json:"rating" binding:"min=0,max=5"`
 }
 
 type LogMovieRequest struct {
